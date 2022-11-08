@@ -7,6 +7,7 @@
   display: flex;
   flex-direction: column;
 }
+
 .toolbar {
   border-bottom: 2px solid grey;
   display: flex;
@@ -14,10 +15,12 @@
   justify-content: center;
   height: 8vh;
 }
+
 .main-container {
   padding: 24px;
   height: 85vh;
 }
+
 .info-button {
   align-self: flex-end;
   position: absolute;
@@ -26,6 +29,7 @@
   font-size: large;
   margin: 12px;
 }
+
 .popover {
   width: 40vw;
   background: black;
@@ -33,25 +37,31 @@
   padding: 0 24px;
   position: absolute;
 }
+
 .info {
   top: 60px;
   left: 30vw;
 }
+
 .guesses-list {
   display: flex;
   flex-direction: row;
   justify-content: center;
 }
+
 .guess {
   margin: 8px;
 }
+
 .input-div {
   width: calc(100vw - 24px);
 }
+
 .input-button {
   background: black;
-  color: white;
+  color: #ffffff;
 }
+
 .sprite {
   padding-top: 16px;
   height: 20%;
@@ -60,7 +70,7 @@
 @media screen and (max-width: 800px) {
   .popover {
     width: 80vw;
-    left: 10px;
+    left: 5vw;
   }
 }
 
@@ -89,6 +99,7 @@
   from {
     transform: rotate(0deg);
   }
+
   to {
     transform: rotate(360deg);
   }

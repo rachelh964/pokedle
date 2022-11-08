@@ -76,6 +76,25 @@ const formattedNames: FormattedPokemonNames[] = [
   }
 ];
 
+const trimName = (trimmedName: string, initialName: string, separator: string): string => {
+  var finalName = trimmedName === initialName ? "" : trimmedName;
+  const separatedName = initialName.split(separator);
+  if (separatedName.length > 1) {
+    separatedName.forEach((nameSection, index) => {
+      finalName =
+        index === 0
+          ? finalName +
+          nameSection.substring(0, 1).toLocaleUpperCase() +
+          nameSection.substring(1)
+          : finalName +
+          separator +
+          nameSection.substring(0, 1).toLocaleUpperCase() +
+          nameSection.substring(1);
+    });
+  }
+  return finalName;
+}
+
 export const capitaliseName = (name: string): string => {
   var capitalisedName = "";
   formattedNames.forEach(formattedName => {
@@ -93,44 +112,23 @@ export const capitaliseName = (name: string): string => {
     return capitalisedName;
   }
   if (!name.includes(" ") && !name.includes("-")) {
-    return name.substr(0, 1).toLocaleUpperCase() + name.substr(1);
+    return name.substring(0, 1).toLocaleUpperCase() + name.substring(1);
   }
-  var combinedName = "";
-  if (name.includes(" ")) {
-    var separatedName = name.split(" ");
-    if (separatedName.length > 1) {
-      separatedName.forEach(nameSection => {
-        combinedName =
-          combinedName +
-          nameSection.substr(0, 1).toLocaleUpperCase() +
-          nameSection.substr(1);
-      });
-    }
+  var combinedName = name;
+  if (combinedName.includes(" ")) {
+    combinedName = trimName(combinedName, name, " ");
   }
-  var nameToUse = combinedName !== "" ? combinedName : name;
-  if (nameToUse.includes("-")) {
-    var separatedDashName = nameToUse.split("-");
-    if (separatedDashName.length > 1) {
-      separatedDashName.forEach((nameSection, index) => {
-        combinedName =
-          index === 0
-            ? combinedName +
-              nameSection.substr(0, 1).toLocaleUpperCase() +
-              nameSection.substr(1)
-            : combinedName +
-              "-" +
-              nameSection.substr(0, 1).toLocaleUpperCase() +
-              nameSection.substr(1);
-      });
-    }
+  if (combinedName.includes("-")) {
+    combinedName = trimName(combinedName, name, "-");
   }
   return combinedName;
 };
 
 const fetchAllPokemonNames = (): string[] => {
-  if (localStorage.getItem("pokemonNames")?.length > 100) {
+  const storedNames = localStorage?.getItem("pokemonNames");
+  if (storedNames && storedNames.length > 100) {
     console.log("fetching names from localStorage");
-    return JSON.parse(localStorage.getItem("pokemonNames"));
+    return JSON.parse(storedNames);
   }
   console.log("not in localStorage, fetching pokemon names");
   const pokemonArray: string[] = [];
@@ -149,8 +147,8 @@ const fetchAllPokemonNames = (): string[] => {
           ? capitalisedName.split("-").join(" ")
           : capitalisedName.toLocaleLowerCase().includes("o-o") ||
             capitalisedName === "Porygon-Z"
-          ? capitalisedName
-          : capitalisedName.split("-", 1)[0];
+            ? capitalisedName
+            : capitalisedName.split("-", 1)[0];
         pokemonArray.push(nameWithoutForme);
       });
       localStorage.setItem("pokemonNames", JSON.stringify(pokemonArray));

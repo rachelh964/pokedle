@@ -67,12 +67,13 @@ function App() {
       "guess"
     ) as HTMLInputElement;
     const guess = input.value;
+    const answer = pokemon?.name;
     input.value = "";
-    console.log("user made the guess: ", guess, "for pokémon", pokemon.name);
+    console.log("user made the guess: ", guess, "for pokémon", answer);
     if (!correctGuess) {
       if (
         simplifyPokemonName(guess).toLocaleLowerCase() ===
-        simplifyPokemonName(pokemon.name).toLocaleLowerCase()
+        simplifyPokemonName(answer).toLocaleLowerCase()
       ) {
         console.log(guess, capitaliseName(guess));
         setGuesses(prevGuesses => [
@@ -84,7 +85,7 @@ function App() {
       } else {
         if (guessNum >= 6) {
           setOutOfGuesses(true);
-          setNotice(Notices.OutOfGuesses + pokemon.name + ".");
+          setNotice(Notices.OutOfGuesses + answer + ".");
         } else {
           console.log(guess, capitaliseName(guess));
           setGuesses(prevGuesses => [
@@ -160,21 +161,21 @@ function App() {
           <p>{redactedDescription}</p>
           {guessNum >= 2 && (
             <p>
-              {pokemon.height}, {pokemon.weight}
+              {pokemon?.height}, {pokemon?.weight}
             </p>
           )}
-          {guessNum >= 3 && <p>Gen {pokemon.gen}</p>}
+          {guessNum >= 3 && <p>Gen {pokemon?.gen}</p>}
           {guessNum >= 4 && (
             <p>
-              Hidden Abilities: {displayAbilities(pokemon.abilities.hidden)}
+              Hidden Abilities: {displayAbilities(pokemon?.abilities.hidden)}
             </p>
           )}
           {guessNum >= 5 && (
             <p>
-              Normal Abilities: {displayAbilities(pokemon.abilities.normal)}
+              Normal Abilities: {displayAbilities(pokemon?.abilities.normal)}
             </p>
           )}
-          {guessNum >= 6 && <p>Species: {pokemon.species}</p>}
+          {guessNum >= 6 && <p>Species: {pokemon?.species}</p>}
           <div className="guesses-list">
             <span>{displayGuesses()}</span>
           </div>
@@ -199,7 +200,7 @@ function App() {
             </div>
           )}
           {(outOfGuesses || correctGuess) && (
-            <img className="sprite" src={pokemon.sprite} alt={pokemon.name} />
+            <img className="sprite" src={pokemon?.sprite} alt={pokemon?.name} />
           )}
         </div>
       </div>

@@ -55,6 +55,8 @@
 
 .input-div {
   width: calc(100vw - 24px);
+  display: flex;
+  justify-content: center;
 }
 
 .input-button {
@@ -65,6 +67,65 @@
 .sprite {
   padding-top: 16px;
   height: 20%;
+}
+
+.dropdown {
+  position: relative;
+  color: #ffffff;
+  cursor: default;
+}
+
+.dropdown .selected-value input {
+  line-height: 1.5;
+  font-size: 1rem;
+  background-color: #424242;
+  border: 1px solid #ccc;
+  border-radius: 2px;
+  box-sizing: border-box;
+  cursor: default;
+  outline: none;
+  padding: 8px 52px 8px 10px;
+  transition: all 200ms ease;
+  width: 20vw;
+}
+
+.dropdown .options {
+  display: none;
+  background-color: #424242;
+  border: 1px solid #ccc;
+  box-shadow: 0 1px 0 rgba(0, 0, 0, 0.06);
+  box-sizing: border-box;
+  margin-top: -1px;
+  max-height: 200px;
+  overflow-y: auto;
+  position: absolute;
+  top: 100%;
+  width: 20vw;
+  -webkit-overflow-scrolling: touch;
+}
+
+.options-container {
+  display: flex;
+  justify-content: center;
+}
+
+.dropdown .options.open {
+  display: flex;
+  flex-direction: column;
+}
+
+.dropdown .option {
+  box-sizing: border-box;
+  color: #d3d3d3;
+  cursor: pointer;
+  display: block;
+  padding: 8px 10px;
+}
+
+.dropdown .option.selected,
+.dropdown .option:hover {
+  background-color: #424242;
+  color: #ffffff;
 }
 
 @media screen and (max-width: 800px) {

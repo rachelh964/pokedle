@@ -61,22 +61,23 @@ const SearchableDropdown = ({
         <div className={`arrow ${isOpen ? "open" : ""}`}></div>
       </div>
 
-      <div className="options-container">
-        <div className={`options ${isOpen ? "open" : ""}`}>
-          {filter(options).map((option, index) => {
-            return (
-              <div
-                onClick={() => selectOption(option)}
-                className={`option ${option === selectedGuess ? "selected" : ""
-                  }`}
-                key={`${id}-${index}`}
-              >
-                {option}
-              </div>
-            );
-          })}
-        </div>
-      </div></div>
+      {filter(options).length > 0 && (
+        <div className="options-container">
+          <div className={`options ${isOpen ? "open" : ""}`}>
+            {filter(options).map((option, index) => {
+              return (
+                <div
+                  onClick={() => selectOption(option)}
+                  className={`option ${option === selectedGuess ? "selected" : ""
+                    }`}
+                  key={`${id}-${index}`}
+                >
+                  {option}
+                </div>
+              );
+            })}
+          </div>
+        </div>)}</div>
   );
 };
 

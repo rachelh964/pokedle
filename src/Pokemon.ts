@@ -78,7 +78,7 @@ export interface PokemonSpecies {
   formDescriptions: string[];
   formsSwitchable: boolean;
   genderRate: number;
-  genera: Genus;
+  genera: Genus[];
   generation: NameWithURL;
   growthRate: NameWithURL;
   habitat: NameWithURL;
@@ -142,7 +142,7 @@ interface PastType {
 interface OtherSprites {
   dreamWorld: BattleSprites;
   home: BattleSprites;
-  officialArtwork: { officialArtwork: string | null };
+  officialArtwork: { frontDefault: string | null };
 }
 
 interface BattleSprites {

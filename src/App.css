@@ -32,10 +32,12 @@
 
 .popover {
   width: 40vw;
+  left: 30vw;
   background: black;
   border: 2px solid grey;
   padding: 0 24px;
   position: absolute;
+  z-index: 1;
 }
 
 .info {
@@ -62,6 +64,11 @@
 .input-button {
   background: black;
   color: #ffffff;
+  font-size: x-large;
+  line-height: 42px;
+  height: 42px;
+  width: 42px;
+  border: 1px solid #ccc;
 }
 
 .sprite {

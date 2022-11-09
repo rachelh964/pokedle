@@ -73,6 +73,14 @@ const formattedNames: FormattedPokemonNames[] = [
   {
     basic: "kommo-o",
     formatted: "Kommo-o"
+  },
+  {
+    basic: "sirfetchd",
+    formatted: "Sirfetch'D"
+  },
+  {
+    basic: "mr-rime",
+    formatted: "Mr. Rime"
   }
 ];
 
@@ -135,7 +143,7 @@ const fetchAllPokemonNames = (): string[] => {
   }
   console.log("not in localStorage, fetching pokemon names");
   const pokemonArray: string[] = [];
-  const link = "https://pokeapi.co/api/v2/pokemon/?limit=807";
+  const link = "https://pokeapi.co/api/v2/pokemon/?limit=905";
   let request = new XMLHttpRequest();
   request.open("GET", link);
   request.send();
@@ -273,8 +281,9 @@ export const simplifyPokemonName = (name: string): string => {
     .toLocaleLowerCase()
     .includes("tapu-")
     ? simplifiedGenderedName.split("-").join(" ")
-    : simplifiedGenderedName.toLocaleLowerCase().includes("o-o") ||
-      simplifiedGenderedName === "Porygon-Z"
+    : simplifiedGenderedName.includes("o-o") ||
+      simplifiedGenderedName === "Porygon-Z" ||
+      simplifiedGenderedName.toLocaleLowerCase().includes("mr-")
       ? simplifiedGenderedName
       : simplifiedGenderedName.split("-", 1)[0];
   return nameWithoutForme.replace(/[.,\/#!$%\^&\*;:{}=_`~()]/g, "");
@@ -288,20 +297,16 @@ export const displayAbilities = (
     return "None";
   }
   return abilities
-    .map((ability: Ability, index: number) => {
+    .map((ability: Ability) => {
       if (
         (hiddenAbilities && ability.isHidden) ||
         (!hiddenAbilities && !ability.isHidden)
       ) {
-        if (index === abilities.length - 1) {
-          return ability;
-        } else {
-          return ability + ", ";
-        }
+        return capitaliseName(ability.ability.name) + ", ";
       }
       return "";
     })
-    .join("");
+    .join("").slice(0, -2);
 };
 
 export const formatGuess = (guess: string): string => {

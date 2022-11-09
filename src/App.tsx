@@ -3,7 +3,6 @@ import { PokemonNew, PokemonSpecies } from "./Pokemon";
 import "./App.css";
 import {
   Guess,
-  capitaliseName,
   displayAbilities,
   simplifyPokemonName,
   trimDescription
@@ -37,15 +36,19 @@ function App() {
   const [outOfGuesses, setOutOfGuesses] = useState(false);
   const [guesses, setGuesses] = useState<Guess[]>([]);
   const [sprite, setSprite] = useState<string | null>(null);
+  const [generation, setGeneration] = useState<string | null>(null);
+  const [species, setSpecies] = useState<string | null>(null);
+  const [height, setHeight] = useState<string | null>(null);
+  const [weight, setWeight] = useState<string | null>(null);
+
   const [pokemonFetched, setPokemonFetched] = useState(false);
   const [pokemonSpeciesFetched, setPokemonSpeciesFetched] = useState(false);
   const [selectedGuess, setSelectedGuess] = useState("");
-  const listOfPokemonNames = (localStorage.getItem("pokemonNames") || "").replace(/[/"/[/]]/g, "").split(',');
-  console.log(listOfPokemonNames, typeof listOfPokemonNames)
+  const listOfPokemonNames = (localStorage.getItem("pokemonNames") || "").toString().replace(/[\[\]"]+/g, "").split(',');
 
   useEffect(() => {
     if (pokemonNumber === 0) {
-      // const pokemonNumber = Math.floor(Math.random() * (807 - 1)) + 1;
+      // setPokemonNumber(Math.floor(Math.random() * (905 - 1)) + 1);
       setPokemonNumber(122);
     }
     if (!pokemonFetched && pokemonNumber !== 0) {
@@ -73,8 +76,22 @@ function App() {
         }
         return false;
       });
-      setRedactedDescription(trimDescription(pokemonSpecies));
-      setSprite(pokemon.sprites.other.officialArtwork.officialArtwork);
+      if (redactedDescription === "") { setRedactedDescription(trimDescription(pokemonSpecies)); }
+      setSprite(pokemon.sprites.other.officialArtwork.frontDefault);
+      const gen = pokemonSpecies.generation.url.split("/");
+      setGeneration(gen[gen.length - 2]);
+      pokemonSpecies.genera.some(genus => {
+        if (genus.language.name === "en") {
+          setSpecies(genus.genus);
+          return true;
+        }
+        return false;
+      });
+      const inches = ((pokemon.height / 10) * 39.37);
+      const feet = Math.floor(inches / 12);
+      setHeight((pokemon.height / 10) + "m (" + feet + "ft " + Math.round(inches - (feet * 12)) + "in)");
+      setWeight((pokemon.weight / 10) + "kg (" + Math.round((pokemon.weight / 10) * 2.20) + "lbs)");
+      console.log("Hello", pokemon, pokemonSpecies);
     } // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [pokemon, pokemonSpecies, pokemonNumber]);
 
@@ -86,11 +103,11 @@ function App() {
     input.value = "";
     console.log("user made the guess: ", guess, "for pokémon", pokemonName);
     console.log(simplifyPokemonName(guess).toLocaleLowerCase(),
-      simplifyPokemonName(pokemon?.name).toLocaleLowerCase())
+      simplifyPokemonName(pokemon?.name).toLocaleLowerCase(), simplifyPokemonName(pokemonName).toLocaleLowerCase())
     if (!correctGuess) {
       if (
         simplifyPokemonName(guess).toLocaleLowerCase() ===
-        simplifyPokemonName(pokemon?.name).toLocaleLowerCase()
+        (simplifyPokemonName(pokemonName).toLocaleLowerCase() || simplifyPokemonName(pokemon?.name).toLocaleLowerCase())
       ) {
         setGuesses(prevGuesses => [
           ...prevGuesses,
@@ -103,12 +120,11 @@ function App() {
           setOutOfGuesses(true);
           setNotice(Notices.OutOfGuesses + pokemonName + ".");
         } else {
-          console.log(guess, capitaliseName(guess));
           setGuesses(prevGuesses => [
             ...prevGuesses,
             guess === ""
               ? { guess: Notices.NoInputGuess, correct: false }
-              : { guess: capitaliseName(guess), correct: false }
+              : { guess: guess, correct: false }
           ]);
           setGuessNum(guessNum + 1);
           if (guess.length === 0) {
@@ -178,10 +194,10 @@ function App() {
           <p>{redactedDescription}</p>
           {guessNum >= 2 && (
             <p>
-              {pokemon?.height}, {pokemon?.weight}
+              {height}, {weight}
             </p>
           )}
-          {guessNum >= 3 && <p>Gen {pokemonSpecies?.generation.name}</p>}
+          {guessNum >= 3 && <p>Generation: {generation}</p>}
           {guessNum >= 4 && (
             <p>
               Hidden Abilities:{" "}
@@ -194,7 +210,7 @@ function App() {
               {pokemon?.abilities && displayAbilities(pokemon.abilities, false)}
             </p>
           )}
-          {guessNum >= 6 && <p>Species: {pokemonSpecies?.genera?.genus}</p>}
+          {guessNum >= 6 && <p>Species: {species}</p>}
           <div className="guesses-list">
             <span>{displayGuesses()}</span>
           </div>
@@ -220,6 +236,7 @@ function App() {
               type="submit"
               onClick={submitGuess}
               disabled={outOfGuesses}
+              value={"\u21B5"}
             ></input>
           </div>
           {notice !== "" && (

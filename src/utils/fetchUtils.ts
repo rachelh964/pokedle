@@ -17,44 +17,6 @@ const fetchPokemon = async (
   const promise = await fetch(link);
   const data = await promise.json();
   return data;
-
-  // return new Promise(function(resolve, reject) {
-  //   const link =
-  //     "https://pokeapi.co/api/v2/pokemon" +
-  //     (isSpecies ? "-species" : "") +
-  //     "/" +
-  //     pokemonNumber;
-
-  //   // fetch(link).then(response => {
-  //   //   if (response.status === 200) {
-  //   //     console.log(response);
-  //   //   } else {
-  //   //     console.log(`error ${response.status} ${response.statusText}`);
-  //   //     setError(Errors.FailedToFetch);
-  //   //   }
-  //   // });
-  //   // let request = new XMLHttpRequest();
-  //   // request.open("GET", link);
-  //   // console.log("request:", request, "link: ", link);
-
-  //   // request.onload = () => {
-  //   //   if (request.status === 200) {
-  //   //     return resolve(JSON.parse(request.response));
-  //   //   } else {
-  //   //     console.log(`error ${request.status} ${request.statusText}`);
-  //   //     setError(Errors.FailedToFetch);
-  //   //     return reject();
-  //   //   }
-  //   // };
-
-  //   // try {
-  //   //   request.send();
-  //   // } catch (e) {
-  //   //   console.log(e);
-  //   //   setError(Errors.FailedToFetch);
-  //   // }
-  //   // return undefined;
-  // });
 };
 
 export const fetchPokemonNew = async (

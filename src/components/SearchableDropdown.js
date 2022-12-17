@@ -5,7 +5,7 @@ const SearchableDropdown = ({
   id,
   selectedGuess,
   handleChange,
-  onKeyDown
+  submitGuess
 }) => {
   const [query, setQuery] = useState("");
   const [isOpen, setIsOpen] = useState(false);
@@ -17,10 +17,10 @@ const SearchableDropdown = ({
     return () => document.removeEventListener("click", toggle);
   }, []);
 
-  const selectOption = (option) => {
+  const selectOption = option => {
     setQuery(() => "");
     handleChange(option);
-    setIsOpen((isOpen) => !isOpen);
+    setIsOpen(isOpen => !isOpen);
   };
 
   function toggle(e) {
@@ -34,9 +34,9 @@ const SearchableDropdown = ({
     return "";
   };
 
-  const filter = (options) => {
+  const filter = options => {
     return options.filter(
-      (option) => option.toLowerCase().indexOf(query.toLowerCase()) > -1
+      option => option.toLowerCase().indexOf(query.toLowerCase()) > -1
     );
   };
 
@@ -49,16 +49,25 @@ const SearchableDropdown = ({
             type="text"
             value={getDisplayValue()}
             name="searchTerm"
-            onChange={(e) => {
+            onChange={e => {
               setQuery(e.target.value);
               handleChange(null);
             }}
             onClick={toggle}
-            onKeyDown={e => e.key === "Enter" && onKeyDown}
+            onKeyDown={e =>
+              e.key === "Enter" &&
+              (submitGuess(), setQuery(""), handleChange(null))
+            }
             id={id}
           />
         </div>
         <div className={`arrow ${isOpen ? "open" : ""}`}></div>
+        <input
+          className="input-button"
+          type="submit"
+          onClick={() => (submitGuess(), setQuery(""), handleChange(null))}
+          value={"\u21B5"}
+        ></input>
       </div>
 
       {filter(options).length > 0 && (
@@ -68,8 +77,9 @@ const SearchableDropdown = ({
               return (
                 <div
                   onClick={() => selectOption(option)}
-                  className={`option ${option === selectedGuess ? "selected" : ""
-                    }`}
+                  className={`option ${
+                    option === selectedGuess ? "selected" : ""
+                  }`}
                   key={`${id}-${index}`}
                 >
                   {option}
@@ -77,7 +87,9 @@ const SearchableDropdown = ({
               );
             })}
           </div>
-        </div>)}</div>
+        </div>
+      )}
+    </div>
   );
 };
 

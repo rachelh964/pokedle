@@ -87,7 +87,9 @@ const formattedNames: FormattedPokemonNames[] = [
 export const capitaliseName = (name: string): string => {
   var capitalisedName = "";
   formattedNames.forEach(formattedName => {
-    if (simplifyPokemonName(formattedName.basic) === simplifyPokemonName(name)) {
+    if (
+      simplifyPokemonName(formattedName.basic) === simplifyPokemonName(name)
+    ) {
       console.log(
         "setting name to :",
         formattedName.formatted,
@@ -123,12 +125,12 @@ export const capitaliseName = (name: string): string => {
         combinedName =
           index === 0
             ? combinedName +
-            nameSection.substring(0, 1).toLocaleUpperCase() +
-            nameSection.substring(1)
+              nameSection.substring(0, 1).toLocaleUpperCase() +
+              nameSection.substring(1)
             : combinedName +
-            "-" +
-            nameSection.substring(0, 1).toLocaleUpperCase() +
-            nameSection.substring(1);
+              "-" +
+              nameSection.substring(0, 1).toLocaleUpperCase() +
+              nameSection.substring(1);
       });
     }
   }
@@ -158,8 +160,8 @@ const fetchAllPokemonNames = (): string[] => {
           ? capitalisedName.split("-").join(" ")
           : capitalisedName.toLocaleLowerCase().includes("o-o") ||
             capitalisedName === "Porygon-Z"
-            ? capitalisedName
-            : capitalisedName.split("-", 1)[0];
+          ? capitalisedName
+          : capitalisedName.split("-", 1)[0];
         pokemonArray.push(nameWithoutForme);
       });
       localStorage.setItem("pokemonNames", JSON.stringify(pokemonArray));
@@ -215,6 +217,19 @@ const indexInDesc = (description: string, name: string): number => {
   return description.toLocaleLowerCase().indexOf(name.toLocaleLowerCase());
 };
 
+const getDescription = (pokemon: PokemonSpecies): string => {
+  const descriptions = pokemon.flavorTextEntries.reverse();
+  let description = "";
+  descriptions.some(flavorText => {
+    if (flavorText.language.name === "en") {
+      description = flavorText.flavorText;
+      return true;
+    }
+    return false;
+  });
+  return description;
+};
+
 export const trimDescription = (pokemon: PokemonSpecies): string => {
   var name: string = "";
   pokemon.names.some(pokeName => {
@@ -222,17 +237,9 @@ export const trimDescription = (pokemon: PokemonSpecies): string => {
       name = pokeName.name;
       return true;
     }
+    return false;
   });
-  let description: string = "";
-  while (description === "") {
-    const descriptions = pokemon.flavorTextEntries.reverse();
-    descriptions.some(flavorText => {
-      if (flavorText.language.name === "en") {
-        description = flavorText.flavorText;
-        return true;
-      }
-    });
-  }
+  let description: string = getDescription(pokemon);
   console.log("checking for ", name, " in ", description);
   const indexOfName = indexInDesc(description, name);
   if (indexOfName !== -1) {
@@ -240,7 +247,7 @@ export const trimDescription = (pokemon: PokemonSpecies): string => {
   }
   const allPokemonNames = fetchAllPokemonNames();
   allPokemonNames.forEach(pokemonName => {
-    const indexOfPokemonName = indexInDesc(description, pokemonName);
+    const indexOfPokemonName = indexInDesc(description, pokemonName + " ");
     if (indexOfPokemonName !== -1) {
       description = replaceAt(
         description,
@@ -284,8 +291,8 @@ export const simplifyPokemonName = (name: string): string => {
     : simplifiedGenderedName.includes("o-o") ||
       simplifiedGenderedName === "Porygon-Z" ||
       simplifiedGenderedName.toLocaleLowerCase().includes("mr-")
-      ? simplifiedGenderedName
-      : simplifiedGenderedName.split("-", 1)[0];
+    ? simplifiedGenderedName
+    : simplifiedGenderedName.split("-", 1)[0];
   return nameWithoutForme.replace(/[.,\/#!$%\^&\*;:{}=_`~()]/g, "");
 };
 
@@ -299,6 +306,7 @@ export const displayAbilities = (
   return abilities
     .map((ability: Ability) => {
       if (
+        hiddenAbilities === undefined ||
         (hiddenAbilities && ability.isHidden) ||
         (!hiddenAbilities && !ability.isHidden)
       ) {
@@ -306,7 +314,8 @@ export const displayAbilities = (
       }
       return "";
     })
-    .join("").slice(0, -2);
+    .join("")
+    .slice(0, -2);
 };
 
 export const formatGuess = (guess: string): string => {

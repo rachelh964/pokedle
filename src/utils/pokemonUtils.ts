@@ -1,4 +1,4 @@
-import { Pokemon } from "./Pokemon";
+import { PokemonSpecies, Ability } from "../Pokemon";
 
 export interface Guess {
   guess: string;
@@ -73,32 +73,23 @@ const formattedNames: FormattedPokemonNames[] = [
   {
     basic: "kommo-o",
     formatted: "Kommo-o"
+  },
+  {
+    basic: "sirfetchd",
+    formatted: "Sirfetch'D"
+  },
+  {
+    basic: "mr-rime",
+    formatted: "Mr. Rime"
   }
 ];
-
-const trimName = (trimmedName: string, initialName: string, separator: string): string => {
-  var finalName = trimmedName === initialName ? "" : trimmedName;
-  const separatedName = initialName.split(separator);
-  if (separatedName.length > 1) {
-    separatedName.forEach((nameSection, index) => {
-      finalName =
-        index === 0
-          ? finalName +
-          nameSection.substring(0, 1).toLocaleUpperCase() +
-          nameSection.substring(1)
-          : finalName +
-          separator +
-          nameSection.substring(0, 1).toLocaleUpperCase() +
-          nameSection.substring(1);
-    });
-  }
-  return finalName;
-}
 
 export const capitaliseName = (name: string): string => {
   var capitalisedName = "";
   formattedNames.forEach(formattedName => {
-    if (formattedName.basic === name) {
+    if (
+      simplifyPokemonName(formattedName.basic) === simplifyPokemonName(name)
+    ) {
       console.log(
         "setting name to :",
         formattedName.formatted,
@@ -114,12 +105,34 @@ export const capitaliseName = (name: string): string => {
   if (!name.includes(" ") && !name.includes("-")) {
     return name.substring(0, 1).toLocaleUpperCase() + name.substring(1);
   }
-  var combinedName = name;
-  if (combinedName.includes(" ")) {
-    combinedName = trimName(combinedName, name, " ");
+  var combinedName = "";
+  if (name.includes(" ")) {
+    var separatedName = name.split(" ");
+    if (separatedName.length > 1) {
+      separatedName.forEach(nameSection => {
+        combinedName =
+          combinedName +
+          nameSection.substring(0, 1).toLocaleUpperCase() +
+          nameSection.substring(1);
+      });
+    }
   }
-  if (combinedName.includes("-")) {
-    combinedName = trimName(combinedName, name, "-");
+  var nameToUse = combinedName !== "" ? combinedName : name;
+  if (nameToUse.includes("-")) {
+    var separatedDashName = nameToUse.split("-");
+    if (separatedDashName.length > 1) {
+      separatedDashName.forEach((nameSection, index) => {
+        combinedName =
+          index === 0
+            ? combinedName +
+              nameSection.substring(0, 1).toLocaleUpperCase() +
+              nameSection.substring(1)
+            : combinedName +
+              "-" +
+              nameSection.substring(0, 1).toLocaleUpperCase() +
+              nameSection.substring(1);
+      });
+    }
   }
   return combinedName;
 };
@@ -132,14 +145,14 @@ const fetchAllPokemonNames = (): string[] => {
   }
   console.log("not in localStorage, fetching pokemon names");
   const pokemonArray: string[] = [];
-  const link = "https://pokeapi.co/api/v2/pokemon/?limit=807";
+  const link = "https://pokeapi.co/api/v2/pokemon/?limit=905";
   let request = new XMLHttpRequest();
   request.open("GET", link);
   request.send();
   request.onload = () => {
     if (request.status === 200) {
       const pokemonResponse = JSON.parse(request.response);
-      pokemonResponse.results.forEach(pokemon => {
+      pokemonResponse.results.forEach((pokemon: any) => {
         const capitalisedName = capitaliseName(pokemon.name);
         const nameWithoutForme = capitalisedName
           .toLocaleLowerCase()
@@ -147,8 +160,8 @@ const fetchAllPokemonNames = (): string[] => {
           ? capitalisedName.split("-").join(" ")
           : capitalisedName.toLocaleLowerCase().includes("o-o") ||
             capitalisedName === "Porygon-Z"
-            ? capitalisedName
-            : capitalisedName.split("-", 1)[0];
+          ? capitalisedName
+          : capitalisedName.split("-", 1)[0];
         pokemonArray.push(nameWithoutForme);
       });
       localStorage.setItem("pokemonNames", JSON.stringify(pokemonArray));
@@ -204,17 +217,37 @@ const indexInDesc = (description: string, name: string): number => {
   return description.toLocaleLowerCase().indexOf(name.toLocaleLowerCase());
 };
 
-export const trimDescription = (pokemon: Pokemon): string => {
-  const name = simplifyPokemonName(pokemon.name);
-  let description = pokemon.description;
-  console.log("checking for ", name, " in ", pokemon.description);
+const getDescription = (pokemon: PokemonSpecies): string => {
+  const descriptions = pokemon.flavorTextEntries.reverse();
+  let description = "";
+  descriptions.some(flavorText => {
+    if (flavorText.language.name === "en") {
+      description = flavorText.flavorText;
+      return true;
+    }
+    return false;
+  });
+  return description;
+};
+
+export const trimDescription = (pokemon: PokemonSpecies): string => {
+  var name: string = "";
+  pokemon.names.some(pokeName => {
+    if (pokeName.language.name === "en") {
+      name = pokeName.name;
+      return true;
+    }
+    return false;
+  });
+  let description: string = getDescription(pokemon);
+  console.log("checking for ", name, " in ", description);
   const indexOfName = indexInDesc(description, name);
   if (indexOfName !== -1) {
     description = replaceAt(description, indexOfName, redacted, name.length);
   }
   const allPokemonNames = fetchAllPokemonNames();
   allPokemonNames.forEach(pokemonName => {
-    const indexOfPokemonName = indexInDesc(description, pokemonName);
+    const indexOfPokemonName = indexInDesc(description, pokemonName + " ");
     if (indexOfPokemonName !== -1) {
       description = replaceAt(
         description,
@@ -253,25 +286,36 @@ export const simplifyPokemonName = (name: string): string => {
 
   var nameWithoutForme = simplifiedGenderedName
     .toLocaleLowerCase()
-    .includes("o-o")
+    .includes("tapu-")
+    ? simplifiedGenderedName.split("-").join(" ")
+    : simplifiedGenderedName.includes("o-o") ||
+      simplifiedGenderedName === "Porygon-Z" ||
+      simplifiedGenderedName.toLocaleLowerCase().includes("mr-")
     ? simplifiedGenderedName
     : simplifiedGenderedName.split("-", 1)[0];
   return nameWithoutForme.replace(/[.,\/#!$%\^&\*;:{}=_`~()]/g, "");
 };
 
-export const displayAbilities = (abilities: string[]): string => {
+export const displayAbilities = (
+  abilities: Ability[],
+  hiddenAbilities?: boolean
+): string => {
   if (abilities.length === 0) {
     return "None";
   }
   return abilities
-    .map((ability: string, index: number) => {
-      if (index === abilities.length - 1) {
-        return ability;
-      } else {
-        return ability + ", ";
+    .map((ability: Ability) => {
+      if (
+        hiddenAbilities === undefined ||
+        (hiddenAbilities && ability.isHidden) ||
+        (!hiddenAbilities && !ability.isHidden)
+      ) {
+        return capitaliseName(ability.ability.name) + ", ";
       }
+      return "";
     })
-    .join("");
+    .join("")
+    .slice(0, -2);
 };
 
 export const formatGuess = (guess: string): string => {

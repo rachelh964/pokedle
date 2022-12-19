@@ -6,6 +6,7 @@
   width: 100vw;
   display: flex;
   flex-direction: column;
+  overflow: hidden;
 }
 
 .toolbar {
@@ -23,19 +24,29 @@
 
 .info-button {
   align-self: flex-end;
+}
+
+.reset-button {
+  align-self: flex-start;
+}
+
+.button {
   position: absolute;
   padding: 8px;
   border: 2px solid grey;
   font-size: large;
-  margin: 12px;
+  margin: 6px;
+  width: 22px;
 }
 
 .popover {
   width: 40vw;
+  left: calc(30vw - 24px);
   background: black;
   border: 2px solid grey;
   padding: 0 24px;
   position: absolute;
+  z-index: 1;
 }
 
 .info {
@@ -54,12 +65,21 @@
 }
 
 .input-div {
-  width: calc(100vw - 24px);
+  width: calc(100vw - 48px);
+  display: flex;
+  justify-content: center;
+  position: fixed;
+  bottom: 24px;
 }
 
 .input-button {
   background: black;
   color: #ffffff;
+  font-size: x-large;
+  line-height: 42px;
+  height: 42px;
+  width: 42px;
+  border: 1px solid #ccc;
 }
 
 .sprite {
@@ -67,10 +87,82 @@
   height: 20%;
 }
 
+.dropdown {
+  position: relative;
+  color: #ffffff;
+  cursor: default;
+}
+
+.control {
+  display: flex;
+}
+
+.dropdown .selected-value input {
+  line-height: 1.5;
+  font-size: 1rem;
+  background-color: #424242;
+  border: 1px solid #ccc;
+  border-radius: 2px;
+  box-sizing: border-box;
+  cursor: default;
+  outline: none;
+  padding: 8px 52px 8px 10px;
+  transition: all 200ms ease;
+  width: 20vw;
+  color: white;
+}
+
+.dropdown .options {
+  display: none;
+  background-color: #424242;
+  border: 1px solid #ccc;
+  box-shadow: 0 1px 0 rgba(0, 0, 0, 0.06);
+  box-sizing: border-box;
+  margin-top: -1px;
+  max-height: 200px;
+  overflow-y: auto;
+  position: absolute;
+  bottom: 100%;
+  width: 20vw;
+  -webkit-overflow-scrolling: touch;
+}
+
+.options-container {
+  display: flex;
+}
+
+.dropdown .options.open {
+  display: flex;
+  flex-direction: column;
+}
+
+.dropdown .option {
+  box-sizing: border-box;
+  color: #d3d3d3;
+  cursor: pointer;
+  display: block;
+  padding: 6px 10px;
+  border-bottom: 1px solid #202020;
+}
+
+.dropdown .option.selected,
+.dropdown .option:hover {
+  background-color: #424242;
+  color: #ffffff;
+}
+
 @media screen and (max-width: 800px) {
   .popover {
     width: 80vw;
     left: 5vw;
+  }
+
+  .dropdown .selected-value input {
+    width: 60vw;
+  }
+
+  .dropdown .options {
+    width: 60vw;
   }
 }
 

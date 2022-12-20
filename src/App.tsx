@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from "react";
 import { PokemonNew, PokemonSpecies } from "./Pokemon";
 import "./App.css";
+//@ts-ignore
+import { getFormattedDate, getPartOfDate, oneDayDiff, PartOfDate } from "./utils/dateUtils.ts";
 import {
   Guess,
   displayAbilities,
@@ -9,7 +11,7 @@ import {
   //@ts-ignore
 } from "./utils/pokemonUtils.ts";
 //@ts-ignore
-import { fetchPokemonNew, fetchPokemonSpecies } from "./utils/fetchUtils.ts";
+import { fetchNumber, fetchPokemonNew, fetchPokemonSpecies } from "./utils/fetchUtils.ts";
 import SearchableDropdown from "./components/SearchableDropdown";
 
 const enum Notices {
@@ -21,6 +23,7 @@ const enum Notices {
 }
 
 function App() {
+  const [isDailyVersion, setIsDailyVersion] = useState<boolean>(true);
   const [pokemon, setPokemon] = useState<PokemonNew | undefined>(undefined);
   const [pokemonSpecies, setPokemonSpecies] = useState<
     PokemonSpecies | undefined
@@ -44,15 +47,33 @@ function App() {
   const [pokemonFetched, setPokemonFetched] = useState(false);
   const [pokemonSpeciesFetched, setPokemonSpeciesFetched] = useState(false);
   const [selectedGuess, setSelectedGuess] = useState("");
-  const listOfPokemonNames = (localStorage.getItem("pokemonNames") || "")
+  const listOfPokemonNames = (localStorage.getItem("pokedle_pokemonNames") || "")
     .toString()
     .replace(/[\[\]"]+/g, "")
     .split(",");
 
   useEffect(() => {
     if (pokemonNumber === 0) {
-      // setPokemonNumber(Math.floor(Math.random() * (905 - 1)) + 1);
-      setPokemonNumber(128);
+      if (isDailyVersion) {
+        // const fetchNum = async () => {
+        //   setPokemonNumber(await fetchNumber());
+        // }
+        // fetchNum();
+        const nowDate: Date = new Date();
+        nowDate.setHours(0, 0, 0, 0);
+        const prevGuessTime: string | null = localStorage.getItem("pokedle_guessTime");
+        if (prevGuessTime !== null) {
+          const prevDate = new Date(prevGuessTime);
+          prevDate.setHours(0, 0, 0, 0);
+          console.log("Comparing previous date ", prevDate.valueOf(), " to current date ", nowDate.valueOf());
+          console.log("Comparing: ", nowDate.valueOf(), " - ", oneDayDiff, " = ", prevDate.valueOf(), ", answer: ", (nowDate.valueOf() - oneDayDiff));
+          // if ()
+        }
+        setPokemonNumber(128);
+      } else {
+        // setPokemonNumber(Math.floor(Math.random() * (905 - 1)) + 1);
+        setPokemonNumber(128);
+      }
     }
     if (!pokemonFetched && pokemonNumber !== 0) {
       fetchPokemonNew(pokemonNumber, setError).then(data => setPokemon(data));
@@ -96,17 +117,17 @@ function App() {
       const feet = Math.floor(inches / 12);
       setHeight(
         pokemon.height / 10 +
-          "m (" +
-          feet +
-          "ft " +
-          Math.round(inches - feet * 12) +
-          "in)"
+        "m (" +
+        feet +
+        "ft " +
+        Math.round(inches - feet * 12) +
+        "in)"
       );
       setWeight(
         pokemon.weight / 10 +
-          "kg (" +
-          Math.round((pokemon.weight / 10) * 2.2) +
-          "lbs)"
+        "kg (" +
+        Math.round((pokemon.weight / 10) * 2.2) +
+        "lbs)"
       );
       console.log("Hello", pokemon, pokemonSpecies);
     } // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -154,6 +175,7 @@ function App() {
           { guess: pokemonName, correct: true }
         ]);
         setCorrectGuess(true);
+        localStorage.setItem("pokedle_guessTime", getFormattedDate(new Date()));
         setNotice(Notices.Right + guessNum + "!");
       } else {
         setGuesses(prevGuesses => [

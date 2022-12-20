@@ -125,12 +125,12 @@ export const capitaliseName = (name: string): string => {
         combinedName =
           index === 0
             ? combinedName +
-              nameSection.substring(0, 1).toLocaleUpperCase() +
-              nameSection.substring(1)
+            nameSection.substring(0, 1).toLocaleUpperCase() +
+            nameSection.substring(1)
             : combinedName +
-              "-" +
-              nameSection.substring(0, 1).toLocaleUpperCase() +
-              nameSection.substring(1);
+            "-" +
+            nameSection.substring(0, 1).toLocaleUpperCase() +
+            nameSection.substring(1);
       });
     }
   }
@@ -138,7 +138,7 @@ export const capitaliseName = (name: string): string => {
 };
 
 const fetchAllPokemonNames = (): string[] => {
-  const storedNames = localStorage?.getItem("pokemonNames");
+  const storedNames = localStorage?.getItem("pokedle_pokemonNames");
   if (storedNames && storedNames.length > 100) {
     console.log("fetching names from localStorage");
     return JSON.parse(storedNames);
@@ -160,14 +160,14 @@ const fetchAllPokemonNames = (): string[] => {
           ? capitalisedName.split("-").join(" ")
           : capitalisedName.toLocaleLowerCase().includes("o-o") ||
             capitalisedName === "Porygon-Z"
-          ? capitalisedName
-          : capitalisedName.split("-", 1)[0];
+            ? capitalisedName
+            : capitalisedName.split("-", 1)[0];
         pokemonArray.push(nameWithoutForme);
       });
-      localStorage.setItem("pokemonNames", JSON.stringify(pokemonArray));
+      localStorage.setItem("pokedle_pokemonNames", JSON.stringify(pokemonArray));
       console.log(
         "stored to localStorage: ",
-        localStorage.getItem("pokemonNames")
+        localStorage.getItem("pokedle_pokemonNames")
       );
     } else {
       console.log(`error ${request.status} ${request.statusText}`);
@@ -291,8 +291,8 @@ export const simplifyPokemonName = (name: string): string => {
     : simplifiedGenderedName.includes("o-o") ||
       simplifiedGenderedName === "Porygon-Z" ||
       simplifiedGenderedName.toLocaleLowerCase().includes("mr-")
-    ? simplifiedGenderedName
-    : simplifiedGenderedName.split("-", 1)[0];
+      ? simplifiedGenderedName
+      : simplifiedGenderedName.split("-", 1)[0];
   return nameWithoutForme.replace(/[.,\/#!$%\^&\*;:{}=_`~()]/g, "");
 };
 

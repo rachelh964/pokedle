@@ -1,5 +1,6 @@
 import { PokemonNew, PokemonSpecies } from "../Pokemon";
 import { camelCase, transform, isArray, isObject } from "lodash";
+import { dummyPokemon, dummyPokemonSpecies } from "./dummyPokemonResponses.ts";
 
 const enum Errors {
   FailedToFetch = "Failed to fetch a pokemon. Check your WiFi?"
@@ -15,7 +16,10 @@ const fetchPokemon = async (
     "/" +
     pokemonNumber;
   const promise = await fetch(link);
-  const data = await promise.json();
+  const data = await promise.json().catch((e) => {
+    console.log(e, "Failed to fetch - using dummy pokemon");
+    return isSpecies ? dummyPokemonSpecies : dummyPokemon;
+  });
   return data;
 };
 

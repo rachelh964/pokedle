@@ -9,6 +9,10 @@
   overflow: hidden;
 }
 
+p {
+  font-size: large;
+}
+
 .toolbar {
   border-bottom: 2px solid grey;
   display: flex;
@@ -26,6 +30,10 @@
   align-self: flex-end;
 }
 
+/* .info-button > span {
+  font-size: xx-large;
+} */
+
 .reset-button {
   align-self: flex-start;
 }
@@ -34,9 +42,9 @@
   position: absolute;
   padding: 8px;
   border: 2px solid grey;
-  font-size: large;
+  font-size: x-large;
   margin: 6px;
-  width: 22px;
+  width: 28.5px;
 }
 
 .popover {
@@ -49,9 +57,15 @@
   z-index: 1;
 }
 
+.daily-toggle {
+  display: flex;
+  justify-content: center;
+}
+
 .info {
   top: 60px;
   left: 30vw;
+  font-size: large;
 }
 
 .guesses-list {

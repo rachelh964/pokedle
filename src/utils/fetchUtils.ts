@@ -15,11 +15,13 @@ const fetchPokemon = async (
     (isSpecies ? "-species" : "") +
     "/" +
     pokemonNumber;
-  const promise = await fetch(link);
-  const data = await promise.json().catch((e) => {
+  let requestFailed: boolean = false;
+  const promise = await fetch(link).catch(e => {
     console.log(e, "Failed to fetch - using dummy pokemon");
+    requestFailed = true;
     return isSpecies ? dummyPokemonSpecies : dummyPokemon;
   });
+  const data = requestFailed ? promise : await promise.json();
   return data;
 };
 

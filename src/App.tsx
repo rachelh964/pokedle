@@ -2,16 +2,17 @@ import React, { useState, useEffect } from "react";
 import { PokemonNew, PokemonSpecies } from "./Pokemon";
 import "./App.css";
 //@ts-ignore
-import { getFormattedDate, getPartOfDate, oneDayDiff, PartOfDate } from "./utils/dateUtils.ts";
+import { getFormattedDate } from "./utils/dateUtils.ts";
 import {
   Guess,
   displayAbilities,
+  fetchAllPokemonNames,
   simplifyPokemonName,
   trimDescription
   //@ts-ignore
 } from "./utils/pokemonUtils.ts";
 //@ts-ignore
-import { fetchNumber, fetchPokemonNew, fetchPokemonSpecies } from "./utils/fetchUtils.ts";
+import { fetchPokemonNew, fetchPokemonSpecies } from "./utils/fetchUtils.ts";
 import SearchableDropdown from "./components/SearchableDropdown";
 
 const enum Notices {
@@ -20,6 +21,12 @@ const enum Notices {
   AttemptedGuessAfterSuccess = "You've already got it dude, take the win.",
   NoInputGuess = "Skipped",
   OutOfGuesses = "Aww, better luck next time! The correct answer was "
+}
+
+interface StoredGuess {
+  number: number;
+  date: string;
+  guesses: Guess[];
 }
 
 function App() {
@@ -47,10 +54,16 @@ function App() {
   const [pokemonFetched, setPokemonFetched] = useState(false);
   const [pokemonSpeciesFetched, setPokemonSpeciesFetched] = useState(false);
   const [selectedGuess, setSelectedGuess] = useState("");
-  const listOfPokemonNames = (localStorage.getItem("pokedle_pokemonNames") || "")
-    .toString()
-    .replace(/[\[\]"]+/g, "")
-    .split(",");
+  const [listOfPokemonNames, setListOfPokemonNames] = useState([]);
+
+  useEffect(() => {
+    setListOfPokemonNames(
+      fetchAllPokemonNames()
+        .toString()
+        .replace(/[\[\]"]+/g, "")
+        .split(",")
+    );
+  }, []);
 
   useEffect(() => {
     if (pokemonNumber === 0) {
@@ -61,18 +74,24 @@ function App() {
         // fetchNum();
         const nowDate: Date = new Date();
         nowDate.setHours(0, 0, 0, 0);
-        const prevGuessTime: string | null = localStorage.getItem("pokedle_guessTime");
+        const prevGuess: StoredGuess | null = JSON.parse(
+          localStorage.getItem("pokedle_prevGuess")
+        );
+        const prevGuessTime: string | null = prevGuess && prevGuess.date;
         if (prevGuessTime !== null) {
           const prevDate = new Date(prevGuessTime);
           prevDate.setHours(0, 0, 0, 0);
-          console.log("Comparing previous date ", prevDate.valueOf(), " to current date ", nowDate.valueOf());
-          console.log("Comparing: ", nowDate.valueOf(), " - ", oneDayDiff, " = ", prevDate.valueOf(), ", answer: ", (nowDate.valueOf() - oneDayDiff));
-          // if ()
+          if (nowDate.valueOf() === prevDate.valueOf()) {
+            setPokemonNumber(prevGuess.number);
+          } else {
+            setPokemonNumber(Math.floor(Math.random() * (905 - 1)) + 1);
+          }
+        } else {
+          setPokemonNumber(Math.floor(Math.random() * (905 - 1)) + 1);
         }
-        setPokemonNumber(128);
       } else {
-        // setPokemonNumber(Math.floor(Math.random() * (905 - 1)) + 1);
-        setPokemonNumber(128);
+        setPokemonNumber(Math.floor(Math.random() * (905 - 1)) + 1);
+        // setPokemonNumber(128);
       }
     }
     if (!pokemonFetched && pokemonNumber !== 0) {
@@ -117,17 +136,17 @@ function App() {
       const feet = Math.floor(inches / 12);
       setHeight(
         pokemon.height / 10 +
-        "m (" +
-        feet +
-        "ft " +
-        Math.round(inches - feet * 12) +
-        "in)"
+          "m (" +
+          feet +
+          "ft " +
+          Math.round(inches - feet * 12) +
+          "in)"
       );
       setWeight(
         pokemon.weight / 10 +
-        "kg (" +
-        Math.round((pokemon.weight / 10) * 2.2) +
-        "lbs)"
+          "kg (" +
+          Math.round((pokemon.weight / 10) * 2.2) +
+          "lbs)"
       );
       console.log("Hello", pokemon, pokemonSpecies);
     } // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -165,25 +184,24 @@ function App() {
       simplifyPokemonName(pokemonName).toLocaleLowerCase()
     );
     if (!correctGuess) {
+      let guessToStore: { guess: string; correct: boolean };
       if (
         simplifyPokemonName(guess).toLocaleLowerCase() ===
         (simplifyPokemonName(pokemonName).toLocaleLowerCase() ||
           simplifyPokemonName(pokemon?.name).toLocaleLowerCase())
       ) {
-        setGuesses(prevGuesses => [
-          ...prevGuesses,
-          { guess: pokemonName, correct: true }
-        ]);
+        guessToStore = { guess: pokemonName, correct: true };
+        setGuesses(prevGuesses => [...prevGuesses, guessToStore]);
         setCorrectGuess(true);
-        localStorage.setItem("pokedle_guessTime", getFormattedDate(new Date()));
+        storeGuess(guessToStore);
         setNotice(Notices.Right + guessNum + "!");
       } else {
-        setGuesses(prevGuesses => [
-          ...prevGuesses,
+        guessToStore =
           guess === ""
             ? { guess: Notices.NoInputGuess, correct: false }
-            : { guess: guess, correct: false }
-        ]);
+            : { guess: guess, correct: false };
+        setGuesses(prevGuesses => [...prevGuesses, guessToStore]);
+        storeGuess(guessToStore);
         if (guessNum >= 6) {
           setOutOfGuesses(true);
           setNotice(Notices.OutOfGuesses + pokemonName + ".");
@@ -205,6 +223,7 @@ function App() {
   };
 
   const displayGuesses = () => {
+    console.log(guesses);
     const guessList = guesses.map((guess: Guess, index: number) => {
       return (
         <p className="guess" key={index}>
@@ -216,6 +235,32 @@ function App() {
     return guessList;
   };
 
+  const storeGuess = (guess: { guess: string; correct: boolean }) => {
+    const guessesToStore = guesses;
+    guessesToStore.push(guess);
+    const guessToStore: StoredGuess = {
+      date: getFormattedDate(new Date()),
+      number: pokemonNumber,
+      guesses: guessesToStore
+    };
+    localStorage.setItem("pokedle_prevGuess", JSON.stringify(guessToStore));
+  };
+
+  useEffect(() => {
+    if (isDailyVersion) {
+      const prevGuesses = JSON.parse(localStorage.getItem("pokedle_prevGuess"));
+      if (prevGuesses?.date !== getFormattedDate(new Date())) {
+        // reset();
+      } else {
+        setPokemonNumber(prevGuesses?.number);
+        setGuesses(prevGuesses.guesses);
+        setGuessNum(prevGuesses.guesses.length);
+      }
+    } else {
+      reset();
+    }
+  }, [isDailyVersion]);
+
   if (error) {
     return <div>{error}</div>;
   } else {
@@ -225,17 +270,25 @@ function App() {
           <div className="reset-button button" onClick={reset}>
             <span>&#8635;</span>
           </div>
-          <h2>POKÉDLE</h2>
+          <h2>POKÉDLE - {isDailyVersion ? `DAILY` : `PRACTICE`}</h2>
           <div
             className="info-button button"
             onMouseEnter={() => setShowInfo(true)}
             onClick={() => setShowInfo(!showInfo)}
             onMouseLeave={() => setShowInfo(false)}
           >
-            <span>&#9432;</span>
+            <span>{showInfo ? `x` : <>&#x2699;</>}</span>
           </div>
           {showInfo && (
             <div className="info popover">
+              <div className="daily-toggle">
+                <p>Practice mode: </p>
+                <input
+                  type="checkbox"
+                  checked={!isDailyVersion}
+                  onChange={() => setIsDailyVersion(!isDailyVersion)}
+                />
+              </div>
               <p>
                 Gender symbols in guesses have been replaced by M/F as
                 appropriate. eg, `[pokemonName]M` will be accepted for

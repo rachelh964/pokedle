@@ -1,3 +1,5 @@
+
+
 interface Family {
   evolutionLine: string[];
   evolutionStage: number;
@@ -12,7 +14,7 @@ interface Abilities {
 export interface Pokemon {
   abilities: Abilities;
   description: string;
-  eggGroups: string[];
+  eggGroups?: string[];
   family: Family;
   gen: number;
   gender: string[];
@@ -71,7 +73,7 @@ export interface PokemonSpecies {
   baseHappiness: number;
   captureRate: number;
   color: NameWithURL;
-  eggGroups: NameWithURL;
+  eggGroups?: NameWithURL;
   evolutionChain: { url: string };
   evolvesFromSpecies: NameWithURL;
   flavorTextEntries: FlavorText[];
@@ -164,37 +166,37 @@ interface BattleSprites {
 }
 
 interface VersionsSprites {
-  generationI: { redBlue: BattleSprites; yellow: BattleSprites };
-  generationII: {
-    crystal: BattleSprites;
-    gold: BattleSprites;
-    silver: BattleSprites;
+  generationI?: { redBlue?: BattleSprites; yellow?: BattleSprites };
+  generationIi?: {
+    crystal?: BattleSprites;
+    gold?: BattleSprites;
+    silver?: BattleSprites;
   };
-  generationIII: {
-    emerald: BattleSprites;
-    fireredLeafgreen: BattleSprites;
-    rubySapphire: BattleSprites;
+  generationIii?: {
+    emerald?: BattleSprites;
+    fireredLeafgreen?: BattleSprites;
+    rubySapphire?: BattleSprites;
   };
-  generationIV: {
-    diamondPearl: BattleSprites;
-    heartgoldSoulsilver: BattleSprites;
-    platinum: BattleSprites;
+  generationIv?: {
+    diamondPearl?: BattleSprites;
+    heartgoldSoulsilver?: BattleSprites;
+    platinum?: BattleSprites;
   };
-  generationV: {
-    blackWhite: BattleSprites;
-    gold: BattleSprites;
-    silver: BattleSprites;
+  generationV?: {
+    blackWhite?: BattleSprites;
+    gold?: BattleSprites;
+    silver?: BattleSprites;
   };
-  generationVI: {
-    omegarubyAlphasapphire: BattleSprites;
-    xY: BattleSprites;
+  generationVi?: {
+    omegarubyAlphasapphire?: BattleSprites;
+    xY?: BattleSprites;
   };
-  generationVII: {
-    icons: BattleSprites;
-    ultraSunUltraMoon: BattleSprites;
+  generationVii?: {
+    icons?: BattleSprites;
+    ultraSunUltraMoon?: BattleSprites;
   };
-  generationVIII: {
-    icons: BattleSprites;
+  generationViii?: {
+    icons?: BattleSprites;
   };
 }
 

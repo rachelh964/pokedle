@@ -11706,12 +11706,6 @@ export const dummyPokemonSpecies: PokemonSpecies = {
     "name": "brown",
     "url": "https://pokeapi.co/api/v2/pokemon-color/3/"
   },
-  "eggGroups": [
-    {
-      "name": "ground",
-      "url": "https://pokeapi.co/api/v2/egg-group/5/"
-    }
-  ],
   "evolutionChain": {
     "url": "https://pokeapi.co/api/v2/evolution-chain/63/"
   },

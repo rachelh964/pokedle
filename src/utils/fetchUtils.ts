@@ -1,6 +1,6 @@
 import { PokemonNew, PokemonSpecies } from "../Pokemon";
 import { camelCase, transform, isArray, isObject } from "lodash";
-import { dummyPokemon, dummyPokemonSpecies } from "./dummyPokemonResponses.ts";
+import { dummyPokemon, dummyPokemonSpecies } from "./dummyPokemonResponses";
 
 const enum Errors {
   FailedToFetch = "Failed to fetch a pokemon. Check your WiFi?"
@@ -15,14 +15,13 @@ const fetchPokemon = async (
     (isSpecies ? "-species" : "") +
     "/" +
     pokemonNumber;
-  let requestFailed: boolean = false;
-  const promise = await fetch(link).catch(e => {
-    console.log(e, "Failed to fetch - using dummy pokemon");
-    requestFailed = true;
-    return isSpecies ? dummyPokemonSpecies : dummyPokemon;
-  });
-  const data = requestFailed ? promise : await promise.json();
-  return data;
+  try {
+    const promise = await fetch(link);
+    return await promise.json();
+  } catch (e) {
+    let dummyData = isSpecies ? dummyPokemonSpecies : dummyPokemon;
+    return JSON.parse(JSON.stringify(dummyData));
+  }
 };
 
 export const fetchPokemonNew = async (
@@ -61,7 +60,7 @@ export const fetchPokemonSpecies = async (
 
 /** API returns in snake_case, converting to camelCase */
 const camelize = (obj: any) =>
-  transform(obj, (acc, value, key, target) => {
-    const camelKey = isArray(target) ? key : camelCase(key);
-    acc[camelKey] = isObject(value) ? camelize(value) : value;
+  transform(obj, (acc: Object, value, key, target) => {
+    const camelKey = isArray(target) ? key : camelCase(String(key));
+    (acc as any)[camelKey] = isObject(value) ? camelize(value) : value;
   });

@@ -1,3 +1,4 @@
+import { map } from "lodash";
 import { PokemonSpecies, Ability } from "../Pokemon";
 
 export interface Guess {
@@ -10,24 +11,32 @@ interface FormattedPokemonNames {
   formatted: string;
 }
 
-const redacted = "[REDACTED]";
+interface AllPokemonNamesGraphqlResponse {
+  data: {
+    pokemon_v2_pokemonspeciesname: [{ name: string }]
+  }
+}
+
+const redacted = "[REDACTED] ";
 const identifiableTerms = [
-  "ultra beast",
-  "legendary",
-  "mythical",
-  "fossilized",
-  "fossil"
+  "Ultra Beast",
+  "Legendary",
+  "Mythical",
+  "Fossilized",
+  "Fossil",
+  "Ancient"
 ];
 const regions = [
-  "kanto",
-  "johto",
-  "hoenn",
-  "sinnoh",
-  "unova",
-  "kalos",
-  "alola",
-  "galar",
-  "hisui"
+  "Kanto",
+  "Johto",
+  "Hoenn",
+  "Sinnoh",
+  "Unova",
+  "Kalos",
+  "Alola",
+  "Galar",
+  "Hisui",
+  "Paldea"
 ];
 const formattedNames: FormattedPokemonNames[] = [
   {
@@ -81,15 +90,101 @@ const formattedNames: FormattedPokemonNames[] = [
   {
     basic: "mr-rime",
     formatted: "Mr. Rime"
+  },
+  {
+    basic: "great-tusk",
+    formatted: "Great Tusk"
+  },
+  {
+    basic: "scream-tail",
+    formatted: "Scream Tail"
+  },
+  {
+    basic: "brute-bonnet",
+    formatted: "Brute Bonnet"
+  },
+  {
+    basic: "flutter-mane",
+    formatted: "Flutter Mane"
+  },
+  {
+    basic: "slither-wing",
+    formatted: "Slither Wing"
+  },
+  {
+    basic: "sandy-shocks",
+    formatted: "Sandy Shocks"
+  },
+  {
+    basic: "iron-treads",
+    formatted: "Iron Treads"
+  },
+  {
+    basic: "iron-bundle",
+    formatted: "Iron Bundle"
+  },
+  {
+    basic: "iron-hands",
+    formatted: "Iron Hands"
+  },
+  {
+    basic: "iron-jugulis",
+    formatted: "Iron Jugulis"
+  },
+  {
+    basic: "iron-moth",
+    formatted: "Iron Moth"
+  },
+  {
+    basic: "iron-thorns",
+    formatted: "Iron Thorns"
+  },
+  {
+    basic: "wo-chien",
+    formatted: "Wo-Chien"
+  },
+  {
+    basic: "chien-pao",
+    formatted: "Chien-Pao"
+  },
+  {
+    basic: "ting-lu",
+    formatted: "Ting-Lu"
+  },
+  {
+    basic: "chi-yu",
+    formatted: "Chi-Yu"
+  },
+  {
+    basic: "roaring-moon",
+    formatted: "Roaring Moon"
+  },
+  {
+    basic: "iron-valiant",
+    formatted: "Iron Valiant"
+  },
+  {
+    basic: "iron-leaves",
+    formatted: "Iron Leaves"
   }
 ];
+
+export const getPokemonCount = (): number => {
+  setTimeout(() => {
+    let pokemonNamesCount: number;
+    fetchAllPokemonNames().then((allPokemonNames: string[]) => {
+      pokemonNamesCount = allPokemonNames.length;
+      console.log(pokemonNamesCount, allPokemonNames, allPokemonNames.length);
+    });
+    return pokemonNamesCount;
+  }, 2000);
+  return 0;
+};
 
 export const capitaliseName = (name: string): string => {
   var capitalisedName = "";
   formattedNames.forEach(formattedName => {
-    if (
-      simplifyPokemonName(formattedName.basic) === simplifyPokemonName(name)
-    ) {
+    if (formattedName.basic === name) {
       console.log(
         "setting name to :",
         formattedName.formatted,
@@ -137,15 +232,9 @@ export const capitaliseName = (name: string): string => {
   return combinedName;
 };
 
-const fetchAllPokemonNames = (): string[] => {
-  const storedNames = localStorage?.getItem("pokedle_pokemonNames");
-  if (storedNames && storedNames.length > 100) {
-    console.log("fetching names from localStorage");
-    return JSON.parse(storedNames);
-  }
-  console.log("not in localStorage, fetching pokemon names");
+export const fetchAllPokemonNamesBackup = (): string[] => {
   const pokemonArray: string[] = [];
-  const link = "https://pokeapi.co/api/v2/pokemon/?limit=905";
+  const link = "https://pokeapi.co/api/v2/pokemon/?limit=" + getPokemonCount();
   let request = new XMLHttpRequest();
   request.open("GET", link);
   request.send();
@@ -164,7 +253,10 @@ const fetchAllPokemonNames = (): string[] => {
             : capitalisedName.split("-", 1)[0];
         pokemonArray.push(nameWithoutForme);
       });
-      localStorage.setItem("pokedle_pokemonNames", JSON.stringify(pokemonArray));
+      localStorage.setItem(
+        "pokedle_pokemonNames",
+        JSON.stringify(pokemonArray)
+      );
       console.log(
         "stored to localStorage: ",
         localStorage.getItem("pokedle_pokemonNames")
@@ -189,32 +281,38 @@ const replaceAt = (
 };
 
 const hideAAndAnGiveaways = (description: string): string => {
+  console.log("changing a and an to a(n) in ", description);
   let desc = description;
-  const indexOfAnBeforeRedacted = desc.indexOf("an " + redacted);
-  const indexOfAnCapBeforeRedacted = desc.indexOf("An " + redacted);
-  if (indexOfAnBeforeRedacted !== -1 || indexOfAnCapBeforeRedacted !== -1) {
+  let indexOfAnBeforeRedacted = desc.indexOf(" an " + redacted);
+  if (indexOfAnBeforeRedacted === -1) {
+    indexOfAnBeforeRedacted = desc.indexOf("An " + redacted);
+  }
+  if (indexOfAnBeforeRedacted !== -1) {
     desc = replaceAt(
       desc,
-      indexOfAnCapBeforeRedacted + 1,
+      indexOfAnBeforeRedacted + 1,
       "(n) " + redacted,
-      12
+      13
     );
   }
-  const indexOfABeforeRedacted = desc.indexOf("a " + redacted);
-  const indexOfACapBeforeRedacted = desc.indexOf("A " + redacted);
-  if (indexOfABeforeRedacted !== -1 || indexOfACapBeforeRedacted !== -1) {
+  let indexOfABeforeRedacted = desc.indexOf(" a " + redacted);
+  if (indexOfABeforeRedacted === -1) {
+    indexOfABeforeRedacted = desc.indexOf("A " + redacted);
+  }
+  if (indexOfABeforeRedacted !== -1) {
+    console.log("replacing a");
     desc = replaceAt(
       desc,
-      indexOfACapBeforeRedacted + 1,
+      indexOfABeforeRedacted + 2,
       "(n) " + redacted,
-      12
+      13
     );
   }
   return desc;
 };
 
 const indexInDesc = (description: string, name: string): number => {
-  return description.toLocaleLowerCase().indexOf(name.toLocaleLowerCase());
+  return description.indexOf(name);
 };
 
 const getDescription = (pokemon: PokemonSpecies): string => {
@@ -230,7 +328,7 @@ const getDescription = (pokemon: PokemonSpecies): string => {
   return description;
 };
 
-export const trimDescription = (pokemon: PokemonSpecies): string => {
+export const trimDescription = (pokemon: PokemonSpecies, allPokemonNames: string[]): string => {
   var name: string = "";
   pokemon.names.some(pokeName => {
     if (pokeName.language.name === "en") {
@@ -245,18 +343,11 @@ export const trimDescription = (pokemon: PokemonSpecies): string => {
   if (indexOfName !== -1) {
     description = replaceAt(description, indexOfName, redacted, name.length);
   }
-  const allPokemonNames = fetchAllPokemonNames();
-  allPokemonNames.forEach(pokemonName => {
-    const indexOfPokemonName = indexInDesc(description, pokemonName + " ");
-    if (indexOfPokemonName !== -1) {
-      description = replaceAt(
-        description,
-        indexOfPokemonName,
-        redacted,
-        pokemonName.length
-      );
-    }
-  });
+  if (allPokemonNames.length > 0) {
+    allPokemonNames.forEach(pokemonName => {
+      description = description.replaceAll(pokemonName, redacted);
+    });
+  }
   identifiableTerms.forEach(term => {
     const indexOfTerm = indexInDesc(description, term);
     if (indexOfTerm !== -1) {
@@ -265,15 +356,7 @@ export const trimDescription = (pokemon: PokemonSpecies): string => {
     }
   });
   regions.forEach(region => {
-    const indexOfRegion = indexInDesc(description, region);
-    if (indexOfRegion !== -1) {
-      description = replaceAt(
-        description,
-        indexOfRegion,
-        redacted,
-        region.length
-      );
-    }
+    description = description.replaceAll(region, redacted);
   });
   return description;
 };
@@ -297,33 +380,79 @@ export const simplifyPokemonName = (name: string): string => {
 };
 
 export const displayAbilities = (
-  abilities: Ability[],
-  hiddenAbilities?: boolean
+  abilities: Ability[]
 ): string => {
   if (abilities.length === 0) {
     return "None";
   }
-  return abilities
+  const formattedAbilities = abilities
     .map((ability: Ability) => {
-      if (
-        hiddenAbilities === undefined ||
-        (hiddenAbilities && ability.isHidden) ||
-        (!hiddenAbilities && !ability.isHidden)
-      ) {
-        return capitaliseName(ability.ability.name) + ", ";
-      }
-      return "";
-    })
-    .join("")
-    .slice(0, -2);
+      const formattedAbility = ability.ability.name.split("-");
+      var capitalisedAbility: string = "";
+      formattedAbility.forEach(nameSection => {
+        capitalisedAbility =
+          ((capitalisedAbility + " ").length > 1 ? (capitalisedAbility + " ") : "") +
+          nameSection.substring(0, 1).toLocaleUpperCase() +
+          nameSection.substring(1, nameSection.length);
+      });
+      return capitalisedAbility;
+    });
+  return formattedAbilities
+    .join(", ") + ", "
+      .slice(0, -2);
 };
 
 export const formatGuess = (guess: string): string => {
-  const allPokemonNames = fetchAllPokemonNames();
-  allPokemonNames.forEach(name => {
-    if (name.toLocaleLowerCase() === guess.toLocaleLowerCase()) {
-      return name;
-    }
+  fetchAllPokemonNames().then((allPokemonNames) => {
+    allPokemonNames.forEach(name => {
+      if (name.toLocaleLowerCase() === guess.toLocaleLowerCase()) {
+        return name;
+      }
+    });
   });
   return guess;
 };
+
+// graphql query for all pokemon names
+export const fetchAllPokemonNames = (): Promise<string[]> => {
+  return new Promise(function (resolve, reject) {
+    const storedNames = localStorage?.getItem("pokedle_pokemonNames");
+    if (storedNames && storedNames.length > 100) {
+      console.log("fetching names from localStorage");
+      resolve(JSON.parse(storedNames));
+    }
+    console.log("not in localStorage, fetching pokemon names");
+    const data = JSON.stringify({
+      query: `{
+      pokemon_v2_pokemonspeciesname(where: {pokemon_v2_language: {name: {_eq: "en"}}}) {
+        name
+      }
+    }`
+    });
+
+    let request = new XMLHttpRequest();
+    request.open("POST", "https://beta.pokeapi.co/graphql/v1beta");
+    request.setRequestHeader("Content-Type", "application/json");
+    request.setRequestHeader("X-Method-Used", "graphiql");
+    request.send(data);
+    request.onload = () => {
+      if (request.status === 200) {
+        const response: AllPokemonNamesGraphqlResponse = JSON.parse(request.response);
+        const nameArray = map(response.data.pokemon_v2_pokemonspeciesname, ((element: any) => { return element.name }));
+
+        localStorage.setItem(
+          "pokedle_pokemonNames",
+          JSON.stringify(nameArray)
+        );
+        console.log(
+          "stored to localStorage: ",
+          localStorage.getItem("pokedle_pokemonNames")
+        );
+        resolve(nameArray);
+      } else {
+        // graphql request for pokemon names failed, so use legacy call and format response
+        resolve(fetchAllPokemonNamesBackup());
+      }
+    }
+  });
+}

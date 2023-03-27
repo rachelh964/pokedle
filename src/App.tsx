@@ -7,6 +7,7 @@ import {
   Guess,
   displayAbilities,
   fetchAllPokemonNames,
+  getPokemonCount,
   simplifyPokemonName,
   trimDescription
   //@ts-ignore
@@ -62,6 +63,8 @@ function App() {
   const [listOfPokemonNames, setListOfPokemonNames] = useState<string[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(true);
 
+  var seedrandom = require('seedrandom');
+
   useEffect(() => {
     setTimeout(() => {
       if (pokemonFetched && pokemonSpeciesFetched && pokemonListFetched) {
@@ -97,17 +100,14 @@ function App() {
   }, []);
 
   useEffect(() => {
-    console.log(pokemonNumber, "pokemon number", listOfPokemonNames, pokemonListFetched);
     if (!pokemonListFetched || listOfPokemonNames.length < 100) {
       console.log("waiting for pokemon list to be fetched...");
     } else {
-      const pokemonCount = listOfPokemonNames.length;
+      const pokemonCount = getPokemonCount();
       if (pokemonNumber === 0) {
         if (isDailyVersion) {
-          // const fetchNum = async () => {
-          //   setPokemonNumber(await fetchNumber());
-          // }
-          // fetchNum();
+          const rngBasedOnDate = seedrandom(new Date().toDateString());
+
           const nowDate: Date = new Date();
           nowDate.setHours(0, 0, 0, 0);
           const prevGuess: StoredGuess | null = JSON.parse(
@@ -120,15 +120,13 @@ function App() {
             if (prevGuess && nowDate.valueOf() === prevDate.valueOf()) {
               setPokemonNumber(prevGuess.number);
             } else {
-              const newPokemon = Math.floor(Math.random() * (pokemonCount - 1)) + 1;
+              const newPokemon = Math.floor(rngBasedOnDate() * (pokemonCount - 1)) + 1;
               setPokemonNumber(newPokemon);
-              console.log("storing prevGuess in prevGuess doesn't exist or date is different", newPokemon);
               localStorage.setItem("pokedle_prevGuess", JSON.stringify({ number: newPokemon, date: getFormattedDate(new Date()), guesses: [] }));
             }
           } else {
-            const newPokemon = Math.floor(Math.random() * (pokemonCount - 1)) + 1;
+            const newPokemon = Math.floor(rngBasedOnDate() * (pokemonCount - 1)) + 1;
             setPokemonNumber(newPokemon);
-            console.log("storing prevGuess in no prev guess time", newPokemon);
             localStorage.setItem("pokedle_prevGuess", JSON.stringify({ number: newPokemon, date: getFormattedDate(new Date()), guesses: [] }))
           }
         } else {

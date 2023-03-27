@@ -17,7 +17,7 @@ interface AllPokemonNamesGraphqlResponse {
   }
 }
 
-const redacted = "[REDACTED] ";
+const redacted = "[REDACTED]";
 const identifiableTerms = [
   "Ultra Beast",
   "Legendary",
@@ -170,15 +170,18 @@ const formattedNames: FormattedPokemonNames[] = [
 ];
 
 export const getPokemonCount = (): number => {
-  setTimeout(() => {
-    let pokemonNamesCount: number;
-    fetchAllPokemonNames().then((allPokemonNames: string[]) => {
-      pokemonNamesCount = allPokemonNames.length;
-      console.log(pokemonNamesCount, allPokemonNames, allPokemonNames.length);
-    });
-    return pokemonNamesCount;
-  }, 2000);
-  return 0;
+  /** pokeapi doesn't have descriptions for gen 9 just yet, from 906
+   * so will set the total count at 905
+   */
+  // setTimeout(() => {
+  //   let pokemonNamesCount: number;
+  //   fetchAllPokemonNames().then((allPokemonNames: string[]) => {
+  //     pokemonNamesCount = allPokemonNames.length;
+  //     console.log(pokemonNamesCount, allPokemonNames, allPokemonNames.length);
+  //   });
+  //   return pokemonNamesCount;
+  // }, 2000);
+  return 905;
 };
 
 export const capitaliseName = (name: string): string => {
@@ -292,7 +295,7 @@ const hideAAndAnGiveaways = (description: string): string => {
       desc,
       indexOfAnBeforeRedacted + 1,
       "(n) " + redacted,
-      13
+      redacted.length
     );
   }
   let indexOfABeforeRedacted = desc.indexOf(" a " + redacted);
@@ -305,7 +308,7 @@ const hideAAndAnGiveaways = (description: string): string => {
       desc,
       indexOfABeforeRedacted + 2,
       "(n) " + redacted,
-      13
+      redacted.length
     );
   }
   return desc;

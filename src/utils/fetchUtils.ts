@@ -1,4 +1,4 @@
-import { PokemonNew, PokemonSpecies } from "../Pokemon";
+import { PokemonNew, PokemonSpecies } from "../context/Pokemon";
 import { camelCase, transform, isArray, isObject } from "lodash";
 import { dummyPokemon, dummyPokemonSpecies } from "./dummyPokemonResponses";
 

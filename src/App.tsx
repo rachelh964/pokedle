@@ -1,22 +1,27 @@
-import React, { useState, useEffect, useCallback, useRef } from "react";
+import React, { useState, useEffect } from "react";
 import { PokemonNew, PokemonSpecies } from "./Pokemon";
-import "./App.css";
+import "./App.scss";
 //@ts-ignore
 import { getFormattedDate } from "./utils/dateUtils.ts";
 import {
   Guess,
   displayAbilities,
   fetchAllPokemonNames,
+  getPokemonCount,
   simplifyPokemonName,
-  trimDescription
   //@ts-ignore
 } from "./utils/pokemonUtils.ts";
 //@ts-ignore
+import { formatHeight, formatWeight, trimDescription } from "./utils/textUtils.ts";
+//@ts-ignore
 import { fetchPokemonNew, fetchPokemonSpecies } from "./utils/fetchUtils.ts";
+//@ts-ignore
+import { updateScore } from "./utils/scoreUtils.ts"
 import SearchableDropdown from "./components/SearchableDropdown";
 
 import lottie from "lottie-web";
 import lottieAnimation from "./assets/loading-lottie.json";
+import StatsModal from "./components/StatsModal";
 
 const enum Notices {
   Right = "SUCCESS!! You got it in ",
@@ -42,10 +47,11 @@ function App() {
   const [pokemonNumber, setPokemonNumber] = useState(0);
   const [pokemonName, setPokemonName] = useState("");
   const [redactedDescription, setRedactedDescription] = useState("");
-  const [correctGuess, setCorrectGuess] = useState(false);
+  const [correctGuess, setCorrectGuess] = useState(-1);
   const [error, setError] = useState("");
   const [notice, setNotice] = useState("");
   const [showInfo, setShowInfo] = useState(false);
+  const [showStats, setShowStats] = useState(false);
   const [outOfGuesses, setOutOfGuesses] = useState(false);
   const [guesses, setGuesses] = useState<Guess[]>([]);
   const [sprite, setSprite] = useState<string | null>(null);
@@ -62,6 +68,11 @@ function App() {
   const [listOfPokemonNames, setListOfPokemonNames] = useState<string[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(true);
 
+  var seedrandom = require('seedrandom');
+
+  /**
+   * Update loading status when fetching is finished
+   */
   useEffect(() => {
     setTimeout(() => {
       if (pokemonFetched && pokemonSpeciesFetched && pokemonListFetched) {
@@ -70,6 +81,9 @@ function App() {
     }, 2000);
   }, [pokemonFetched, pokemonSpeciesFetched, pokemonListFetched]);
 
+  /**
+   * Set up Pokémon searchable dropdown list
+   */
   useEffect(() => {
     if (listOfPokemonNames && listOfPokemonNames.length < 100) {
       fetchAllPokemonNames().then((list: string[]) => {
@@ -80,38 +94,41 @@ function App() {
               .split(","));
             setPokemonListFetched(true);
           }
-        }, 2000);
+        }, 1000);
       });
     }
   }, [listOfPokemonNames])
 
+  /**
+   * Set up loading animation
+   */
   useEffect(() => {
     const element = document.getElementById("loader");
-    if (element) {
+    if (element && isLoading) {
       lottie.loadAnimation({
         container: element, // the dom element that will contain the animation
         renderer: 'svg',
         animationData: lottieAnimation // the path to the animation json
       });
     }
-  }, []);
+  }, [isLoading]);
 
+  /**
+   * Generate new Pokémon & fetch all details
+   */
   useEffect(() => {
-    console.log(pokemonNumber, "pokemon number", listOfPokemonNames, pokemonListFetched);
     if (!pokemonListFetched || listOfPokemonNames.length < 100) {
       console.log("waiting for pokemon list to be fetched...");
     } else {
-      const pokemonCount = listOfPokemonNames.length;
+      const pokemonCount = getPokemonCount();
       if (pokemonNumber === 0) {
         if (isDailyVersion) {
-          // const fetchNum = async () => {
-          //   setPokemonNumber(await fetchNumber());
-          // }
-          // fetchNum();
+          const rngBasedOnDate = seedrandom(new Date().toDateString());
+
           const nowDate: Date = new Date();
           nowDate.setHours(0, 0, 0, 0);
           const prevGuess: StoredGuess | null = JSON.parse(
-            localStorage.getItem("pokedle_prevGuess")
+            localStorage.getItem("pokedle_todaysGuess")
           );
           const prevGuessTime: string | null = prevGuess && prevGuess.date;
           if (prevGuessTime !== null) {
@@ -120,19 +137,13 @@ function App() {
             if (prevGuess && nowDate.valueOf() === prevDate.valueOf()) {
               setPokemonNumber(prevGuess.number);
             } else {
-              const newPokemon = Math.floor(Math.random() * (pokemonCount - 1)) + 1;
-              setPokemonNumber(newPokemon);
-              console.log("storing prevGuess in prevGuess doesn't exist or date is different", newPokemon);
-              localStorage.setItem("pokedle_prevGuess", JSON.stringify({ number: newPokemon, date: getFormattedDate(new Date()), guesses: [] }));
+              setNewPokemonNumber(rngBasedOnDate, pokemonCount);
             }
           } else {
-            const newPokemon = Math.floor(Math.random() * (pokemonCount - 1)) + 1;
-            setPokemonNumber(newPokemon);
-            console.log("storing prevGuess in no prev guess time", newPokemon);
-            localStorage.setItem("pokedle_prevGuess", JSON.stringify({ number: newPokemon, date: getFormattedDate(new Date()), guesses: [] }))
+            setNewPokemonNumber(rngBasedOnDate, pokemonCount);
           }
         } else {
-          setPokemonNumber(Math.floor(Math.random() * (pokemonCount - 1)) + 1);
+          setPokemonNumber(generatePokemonNumber(Math.random, pokemonCount));
           // setPokemonNumber(128);
         }
       }
@@ -176,32 +187,30 @@ function App() {
         }
         return false;
       });
-      const inches = (pokemon.height / 10) * 39.37;
-      const feet = Math.floor(inches / 12);
-      setHeight(
-        pokemon.height / 10 +
-        "m (" +
-        feet +
-        "ft " +
-        Math.round(inches - feet * 12) +
-        "in)"
-      );
-      setWeight(
-        pokemon.weight / 10 +
-        "kg (" +
-        Math.round((pokemon.weight / 10) * 2.2) +
-        "lbs)"
-      );
+      setHeight(formatHeight(pokemon.height));
+      setWeight(formatWeight(pokemon.weight));
       console.log("Hello", pokemon, pokemonSpecies);
+    }
+
+    function setNewPokemonNumber(rngBasedOnDate: any, pokemonCount: any) {
+      const newPokemon = generatePokemonNumber(rngBasedOnDate, pokemonCount);
+      setPokemonNumber(newPokemon);
+      localStorage.setItem("pokedle_todaysGuess", JSON.stringify({ number: newPokemon, date: getFormattedDate(new Date()), guesses: [] }));
+    }
+
+    function generatePokemonNumber(rngBasedOnDate: any, pokemonCount: any) {
+      return Math.floor(rngBasedOnDate() * (pokemonCount - 1)) + 1;
     } // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [pokemon, pokemonSpecies, pokemonNumber, listOfPokemonNames, pokemonListFetched, isDailyVersion]);
 
   const reset = () => {
+    setIsLoading(true);
     setPokemon(undefined);
+    setPokemonName("")
     setRedactedDescription("");
     setPokemonSpecies(undefined);
     setPokemonNumber(0);
-    setCorrectGuess(false);
+    setCorrectGuess(-1);
     setOutOfGuesses(false);
     setGuesses([]);
     setSprite(null);
@@ -218,10 +227,11 @@ function App() {
     let input: HTMLInputElement = document.getElementById(
       "guess"
     ) as HTMLInputElement;
-    const guess = input.value;
+    const guess = input?.value || "";
     input.value = "";
     console.log("user made the guess: ", guess, "for pokémon", pokemonName);
-    if (!correctGuess) {
+    console.log("correctGuess: ", correctGuess, correctGuess > -1);
+    if (correctGuess <= -1) {
       let guessToStore: { guess: string; correct: boolean };
       if (
         simplifyPokemonName(guess).toLocaleLowerCase() ===
@@ -230,9 +240,14 @@ function App() {
       ) {
         guessToStore = { guess: pokemonName, correct: true };
         setGuesses(prevGuesses => [...prevGuesses, guessToStore]);
-        setCorrectGuess(true);
+        console.log("setting correct guess to ", guesses.length + 1);
+        setCorrectGuess(guesses.length + 1);
+        updateScore(guesses.length + 1);
         storeGuess(guessToStore);
         setNotice(Notices.Right + guesses.length + "!");
+        setTimeout(() => {
+          setShowStats(true);
+        }, 2000);
       } else {
         if (guesses.length <= 5) {
           guessToStore =
@@ -242,6 +257,7 @@ function App() {
           setGuesses([...guesses, guessToStore]);
           storeGuess(guessToStore);
           if (guesses.length >= 5) {
+            updateScore(7);
             setOutOfGuesses(true);
             setNotice(Notices.OutOfGuesses + pokemonName + ".");
           }
@@ -257,6 +273,7 @@ function App() {
     } else {
       setNotice(Notices.AttemptedGuessAfterSuccess);
     }
+    console.log("Have made a guess", correctGuess, guesses.length);
     setTimeout(() => {
       setNotice("");
     }, 5000);
@@ -265,10 +282,10 @@ function App() {
   const displayGuesses = () => {
     const guessList = guesses.map((guess: Guess, index: number) => {
       return (
-        <p className="guess" key={index}>
-          {guess.guess}
-          {guess.correct ? " \u2611" : " \u2612"}
-        </p>
+        <tr style={{ padding: "8px" }} className="guess" key={index}>
+          <td style={{ padding: "4px" }}>{guess.guess}</td>
+          <td style={{ padding: "4px" }}>{guess.correct ? "\u2714" : "\u2718"}</td>
+        </tr>
       );
     });
     return guessList;
@@ -284,18 +301,28 @@ function App() {
         guesses: guessesToStore
       };
       console.log("storing prevGuess in storeGuess", guessToStore);
-      localStorage.setItem("pokedle_prevGuess", JSON.stringify(guessToStore));
+      localStorage.setItem("pokedle_todaysGuess", JSON.stringify(guessToStore));
     }
   };
 
   useEffect(() => {
-    const prevGuesses: StoredGuess | null = JSON.parse(localStorage.getItem("pokedle_prevGuess"));
+    const prevGuesses: StoredGuess | null = JSON.parse(localStorage.getItem("pokedle_todaysGuess"));
     if (isDailyVersion && prevGuesses !== null) {
       if (prevGuesses?.date !== getFormattedDate(new Date())) {
-        // reset();
+        reset();
       } else {
         setPokemonNumber(prevGuesses.number);
         setGuesses(prevGuesses.guesses);
+        setCorrectGuess(-1);
+        setPokemonFetched(false);
+        setPokemonSpeciesFetched(false);
+        setRedactedDescription("");
+        setIsLoading(true);
+        prevGuesses.guesses.forEach((guess, index) => {
+          if (guess.correct === true) {
+            setCorrectGuess(index + 1);
+          }
+        })
       }
     } else {
       reset();
@@ -309,30 +336,28 @@ function App() {
   //   return (<div><div id="loader" style={{ display: (isLoading ? "" : "none") }} /></div>)
   // }
   return (
-    <div className="App">
+    <div className="App" id="app">
       <div className="toolbar">
-        <div className="reset-button button" onClick={reset}>
-          <span>&#8635;</span>
+        <div
+          className="stats-button button"
+          onMouseEnter={() => setShowStats(true)}
+          onClick={() => setShowStats(!showStats)}
+        >
+          {showStats ? `x` : <>&#9745;</>}
         </div>
-        <h2>POKÉDLE - {isDailyVersion ? `DAILY` : `PRACTICE`}</h2>
+        <h2 className="title">POKÉDLE - {" "}
+          <span style={{ cursor: "pointer", textDecoration: "underline" }} onClick={() => setIsDailyVersion(!isDailyVersion)}>{isDailyVersion ? `DAILY` : `PRACTICE`}</span></h2>
         <div
           className="info-button button"
           onMouseEnter={() => setShowInfo(true)}
           onClick={() => setShowInfo(!showInfo)}
-          onMouseLeave={() => setShowInfo(false)}
         >
           <span>{showInfo ? `x` : <>&#x2699;</>}</span>
         </div>
         {showInfo && (
-          <div className="info popover">
-            <div className="daily-toggle">
-              <p>Practice mode: </p>
-              <input
-                type="checkbox"
-                checked={!isDailyVersion}
-                onChange={() => setIsDailyVersion(!isDailyVersion)}
-              />
-            </div>
+          <div className="info popover"
+            onMouseLeave={() => setShowInfo(false)}>
+            <p>Generations 1-8 supported (Dex numbers 0001-0905)</p>
             <p>
               Gender symbols in guesses have been replaced by M/F as
               appropriate. eg, `[pokemonName]M` will be accepted for
@@ -350,6 +375,12 @@ function App() {
             <p>Data provided by pokedex-api</p>
           </div>
         )}
+        {showStats && (
+          <div className="stats popover"
+            onMouseLeave={() => setShowStats(false)}>
+            <StatsModal />
+          </div>
+        )}
       </div>
 
       {isLoading ? (
@@ -359,19 +390,19 @@ function App() {
       ) : (
         <div className="main-container">
           <p>{redactedDescription}</p>
-          {guesses.length >= 1 && (
+          {guesses.length >= 1 && (correctGuess === -1 || correctGuess > 1) && (
             <p>
-              {height}, {weight}
+              Height: {height} - Weight: {weight}
             </p>
           )}
-          {guesses.length >= 2 && <p>Generation: {generation}</p>}
-          {guesses.length >= 3 && (
+          {guesses.length >= 2 && (correctGuess === -1 || correctGuess > 2) && <p>Generation: {generation}</p>}
+          {guesses.length >= 3 && (correctGuess === -1 || correctGuess > 3) && (
             <p>
               Abilities:{" "}
               {pokemon?.abilities && displayAbilities(pokemon.abilities)}
             </p>
           )}
-          {guesses.length >= 4 && (
+          {guesses.length >= 4 && (correctGuess === -1 || correctGuess > 4) && (
             <p>
               Colour:{" "}
               {pokemonSpecies?.color &&
@@ -379,47 +410,54 @@ function App() {
                 pokemonSpecies.color.name.slice(1)}
             </p>
           )}
-          {guesses.length >= 5 && <p>Species: {species}</p>}
-          {!outOfGuesses && !correctGuess && (
-            <div className="input-div">
-              {listOfPokemonNames && listOfPokemonNames.length > 2 ? (
-                <SearchableDropdown
-                  options={listOfPokemonNames}
-                  id="guess"
-                  selectedGuess={selectedGuess}
-                  handleChange={sel => setSelectedGuess(sel)}
-                  submitGuess={submitGuess}
-                />
-              ) : (
-                <>
-                  <input
-                    type="text"
-                    id="guess"
-                    name="guess"
-                    onKeyDown={e => e.key === "Enter" && submitGuess()}
-                    autoComplete="off"
-                  ></input>
-                  <input
-                    className="input-button"
-                    type="submit"
-                    onClick={submitGuess}
-                    disabled={outOfGuesses}
-                    value={"\u21B5"}
-                  ></input>
-                </>
-              )}
-            </div>
-          )}
-
-          <div className="guesses-list">
-            <span>{displayGuesses()}</span>
+          {guesses.length >= 5 && (correctGuess === -1 || correctGuess > 5) && <p>Species: {species}</p>}
+          <div className="input-div">
+            {!outOfGuesses && correctGuess < 0 && (
+              <>
+                {listOfPokemonNames && listOfPokemonNames.length > 2 ? (
+                  <>
+                    <SearchableDropdown
+                      options={listOfPokemonNames}
+                      id="guess"
+                      selectedGuess={selectedGuess}
+                      handleChange={sel => setSelectedGuess(sel)}
+                      submitGuess={submitGuess}
+                    />
+                    {/* {!isDailyVersion && <input className="input-button" onClick={reset} type="button" value={"\u21BB"} />} */}
+                  </>
+                ) : (
+                  <>
+                    <input
+                      type="text"
+                      id="guess"
+                      name="guess"
+                      onKeyDown={e => e.key === "Enter" && submitGuess()}
+                      autoComplete="off"
+                    ></input>
+                    <input
+                      className="input-button"
+                      type="submit"
+                      onClick={submitGuess}
+                      disabled={outOfGuesses}
+                      value={"\u21B5"}
+                    ></input>
+                  </>
+                )}
+              </>
+            )}
+            {!isDailyVersion && <input className="input-button" onClick={reset} type="button" value={"\u21BB"} />}
           </div>
+
+          <table className="guesses-list">
+            <thead><tr><th>Guesses</th><th>{"\u2714"} / {"\u2718"}</th></tr></thead>
+            <tbody>{displayGuesses()}</tbody>
+          </table>
           {notice !== "" && (
             <div className="popover">
               <p>{notice}</p>
             </div>
           )}
-          {(outOfGuesses || correctGuess) && (
+          {(outOfGuesses || correctGuess > -1) && (
             <img className="sprite" src={sprite || ""} alt={pokemonName} />
           )}
         </div>

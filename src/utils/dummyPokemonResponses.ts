@@ -1,4 +1,4 @@
-import { PokemonNew, PokemonSpecies } from "../Pokemon";
+import { PokemonNew, PokemonSpecies } from "../context/Pokemon";
 
 export const dummyPokemon: PokemonNew = {
   "abilities": [

@@ -16,18 +16,97 @@ p {
 .toolbar {
   border-bottom: 2px solid grey;
   display: flex;
-  flex-direction: column;
+  flex-direction: row;
   justify-content: center;
   height: 8vh;
 }
 
-.main-container {
-  padding: 24px;
-  height: 85vh;
+.title {
+  width: 100vw;
+  align-self: center;
 }
 
 .info-button {
   align-self: flex-end;
+}
+
+.stats-button {
+  align-self: flex-end;
+  margin-right: 40px;
+}
+
+.stats-modal {
+  h3 {
+    margin: 12px;
+  }
+
+  table {
+    display: flex;
+    flex-direction: column;
+
+    thead,
+    tbody {
+      tr {
+        display: flex;
+
+        th,
+        td {
+          margin: auto;
+          width: 33.3vw
+        }
+
+        td {
+          font-size: x-large;
+          font-weight: bold;
+        }
+      }
+    }
+
+    tbody {
+      tr {
+        border: none;
+      }
+    }
+  }
+
+  .stats-distribution {
+    table {
+      margin: 12px 0;
+
+      thead,
+      tbody {
+        tr {
+          border: none;
+        }
+      }
+    }
+
+    ul {
+      padding: 0;
+
+      .stat-distribution {
+        display: flex;
+        flex-direction: row;
+        //place-content: space-evenly;
+
+        p {
+          margin: 2px;
+        }
+
+        .distribution-bar {
+          background-color: rgba(255, 255, 255, 0.6);
+          min-width: 16px;
+          border: 2px solid;
+          border-color: rgba(0, 0, 0, 0.5);
+          margin: 1px 4px;
+
+          p {
+            margin: 0;
+          }
+        }
+      }
+    }
+  }
 }
 
 /* .info-button > span {
@@ -39,7 +118,7 @@ p {
 }
 
 .button {
-  position: absolute;
+  /* position: absolute; */
   padding: 8px;
   border: 2px solid grey;
   font-size: x-large;
@@ -48,6 +127,7 @@ p {
 }
 
 .popover {
+  color: white;
   width: 40vw;
   left: calc(30vw - 24px);
   background: black;
@@ -62,16 +142,24 @@ p {
   justify-content: center;
 }
 
-.info {
+.info,
+.stats {
   top: 60px;
   left: 30vw;
   font-size: large;
 }
 
+.main-container {
+  padding: 24px;
+  height: 85vh;
+}
+
 .guesses-list {
-  display: flex;
-  flex-direction: row;
-  justify-content: center;
+  margin: auto;
+}
+
+tr {
+  border-bottom: 1px solid white;
 }
 
 .guess {
@@ -168,7 +256,7 @@ p {
 @media screen and (max-width: 800px) {
   .popover {
     width: 80vw;
-    left: 5vw;
+    left: 3vw;
   }
 
   .dropdown .selected-value input {

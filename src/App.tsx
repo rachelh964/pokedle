@@ -14,7 +14,7 @@ import {
 //@ts-ignore
 import { formatHeight, formatWeight, trimDescription } from "./utils/textUtils.ts";
 //@ts-ignore
-import { fetchPokemonNew, fetchPokemonSpecies } from "./utils/fetchUtils.ts";
+import { fetchPokemon, fetchPokemonSpecies } from "./utils/fetchUtils.ts";
 //@ts-ignore
 import { updateScore } from "./utils/scoreUtils.ts"
 import SearchableDropdown from "./components/SearchableDropdown";
@@ -143,13 +143,24 @@ function App() {
             setNewPokemonNumber(rngBasedOnDate, pokemonCount);
           }
         } else {
-          setPokemonNumber(generatePokemonNumber(Math.random, pokemonCount));
-          // setPokemonNumber(128);
+          /** Set up for practice mode - but DON'T generate the same as today's daily pokemon */
+          let pokemonNum: number = 0;
+          const prevGuess: StoredGuess | null = JSON.parse(
+            localStorage.getItem("pokedle_todaysGuess")
+          );
+          const dailyNum: number = prevGuess === null ? 0 : prevGuess.number;
+          do {
+            pokemonNum = generatePokemonNumber(Math.random, pokemonCount);
+            console.log(pokemonNum, dailyNum, pokemonNum === dailyNum);
+          } while (
+            pokemonNum === 0 || pokemonNum === dailyNum
+          )
+          setPokemonNumber(pokemonNum);
         }
       }
     }
     if (!pokemonFetched && pokemonNumber !== 0) {
-      fetchPokemonNew(pokemonNumber, setError).then(data => setPokemon(data));
+      fetchPokemon(pokemonNumber, setError).then(data => setPokemon(data));
       setPokemonFetched(true);
     } else if (
       pokemon !== undefined &&

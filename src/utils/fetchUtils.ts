@@ -6,7 +6,7 @@ const enum Errors {
   FailedToFetch = "Failed to fetch a pokemon. Check your WiFi?"
 }
 
-const fetchPokemon = async (
+const fetchPokemonDetails = async (
   pokemonNumber: number,
   isSpecies: boolean
 ): Promise<JSON> => {
@@ -24,16 +24,15 @@ const fetchPokemon = async (
   }
 };
 
-export const fetchPokemonNew = async (
+export const fetchPokemon = async (
   pokemonNumber: number,
   setError: (error: string) => void
 ): Promise<PokemonNew | undefined> => {
-  const pokemonResponse = await fetchPokemon(pokemonNumber, false);
+  const pokemonResponse = await fetchPokemonDetails(pokemonNumber, false);
   if (pokemonResponse !== undefined) {
     const pokemonCamelResponse: PokemonNew = camelize(
       pokemonResponse
     ) as PokemonNew;
-    console.log("pokemon data: ", pokemonCamelResponse);
     return pokemonCamelResponse;
   } else {
     setError(Errors.FailedToFetch);
@@ -45,12 +44,11 @@ export const fetchPokemonSpecies = async (
   pokemonNumber: number,
   setError: (error: string) => void
 ): Promise<PokemonSpecies | undefined> => {
-  const pokemonResponse = await fetchPokemon(pokemonNumber, true);
+  const pokemonResponse = await fetchPokemonDetails(pokemonNumber, true);
   if (pokemonResponse !== undefined) {
     const pokemonSpeciesCamelResponse: PokemonSpecies = camelize(
       pokemonResponse
     ) as PokemonSpecies;
-    console.log("pokemon data: ", pokemonSpeciesCamelResponse);
     return pokemonSpeciesCamelResponse;
   } else {
     setError(Errors.FailedToFetch);

@@ -15,7 +15,8 @@ interface AllPokemonNamesGraphqlResponse {
 }
 
 export const getPokemonCount = (): number => {
-  /** pokeapi doesn't have descriptions for gen 9 just yet, from 906
+  /** 
+   * pokeapi doesn't have descriptions for gen 9 just yet, from 906
    * so will set the total count at 905
    */
   // setTimeout(() => {

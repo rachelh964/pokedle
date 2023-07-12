@@ -2,10 +2,33 @@ import { PokemonSpecies } from "../context/Pokemon";
 import { formattedNames, identifiableTerms, locations, regions } from "../context/Terminology";
 import { getDescription } from "./pokemonUtils";
 
-const redacted = "[REDACTED]"
-const redactedPokemon = "[POKÉMON]";
-const redactedRegion = "[REGION]";
-const redactedLocation = "[LOCATION]";
+interface Redactor {
+  main: string;
+  escaped: string;
+}
+
+interface Redactors {
+  [key: string]: Redactor;
+}
+
+const redactors: Redactors = {
+  defaultRedactor: {
+    main: "[REDACTED]",
+    escaped: "\\[REDACTED\\]"
+  },
+  pokemonRedactor: {
+    main: "[POKÉMON]",
+    escaped: "\\[POKÉMON\\]"
+  },
+  regionRedactor: {
+    main: "[REGION]",
+    escaped: "\\[REGION\\]"
+  },
+  locationRedactor: {
+    main: "[LOCATION]",
+    escaped: "\\[LOCATION\\]"
+  }
+}
 
 /** Description formatting */
 const replaceAt = (
@@ -20,23 +43,25 @@ const replaceAt = (
   );
 };
 
-const replaceAOrAn = (description: string, indexBeforeRedacted: number, isA: boolean, redaction: string): string => {
-  return replaceAt(description, indexBeforeRedacted + (isA ? 2 : 1), ("(n) " + redaction), redaction.length);
+const replaceAOrAn = (description: string, indexBeforeRedacted: number, lengthOfGiveaway: number, redaction: string, isA: boolean): string => {
+  return replaceAt(description, indexBeforeRedacted + lengthOfGiveaway + (isA ? 0 : -1), ("(n) " + redaction), redaction.length + (isA ? 1 : 2));
+}
+
+const getAllIndexes = (description: string, search: string): number[] => {
+  return [...description.matchAll(new RegExp(search, 'gi'))].map(a => a.index);
 }
 
 const hideAAndAnGiveaways = (description: string): string => {
   console.log("changing a and an to a(n) in ", description);
   let desc = description;
   const stringsToReplace = [" an ", "An ", " a ", "A "];
-  stringsToReplace.forEach((aOrAnString) => {
-    let indexToReplace = desc.indexOf(aOrAnString + redactedPokemon);
-    if (indexToReplace !== -1) {
-      desc = replaceAOrAn(desc, indexToReplace, false, redactedPokemon);
-    }
-    desc.indexOf(aOrAnString + redactedRegion);
-    if (indexToReplace !== -1) {
-      desc = replaceAOrAn(desc, indexToReplace, false, redactedRegion);
-    }
+  stringsToReplace.forEach((aOrAnString, index) => {
+    Object.entries(redactors).forEach(([key, value]) => {
+      let indexesToReplace = getAllIndexes(desc, aOrAnString + value.escaped);
+      indexesToReplace.forEach((indexToReplace) => {
+        desc = replaceAOrAn(desc, indexToReplace, aOrAnString.length - 1, value.main, index > 1);
+      })
+    });
   });
   return desc;
 };
@@ -55,27 +80,23 @@ export const trimDescription = (pokemon: PokemonSpecies, allPokemonNames: string
     return false;
   });
   let description: string = getDescription(pokemon);
-  console.log("checking for ", name, " in ", description);
-  const indexOfName = indexInDesc(description, name);
-  if (indexOfName !== -1) {
-    description = replaceAt(description, indexOfName, redactedPokemon, name.length);
-  }
+  description = description.replaceAll(name, redactors.pokemonRedactor.main);
   if (allPokemonNames.length > 0) {
     allPokemonNames.forEach(pokemonName => {
-      description = description.replaceAll(pokemonName, redactedPokemon);
+      description = description.replaceAll(pokemonName, redactors.pokemonRedactor.main);
     });
   }
   identifiableTerms.forEach(term => {
     const indexOfTerm = indexInDesc(description, term);
     if (indexOfTerm !== -1) {
-      description = hideAAndAnGiveaways(replaceAt(description, indexOfTerm, redacted, term.length));
+      description = hideAAndAnGiveaways(replaceAt(description, indexOfTerm, redactors.defaultRedactor.main, term.length));
     }
   });
   regions.forEach(region => {
-    description = description.replaceAll(region, redactedRegion);
+    description = description.replaceAll(region, redactors.regionRedactor.main);
   });
   locations.forEach(location => {
-    description = description.replaceAll(location, redactedLocation);
+    description = description.replaceAll(location, redactors.locationRedactor.main);
   });
   return description;
 };

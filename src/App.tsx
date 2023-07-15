@@ -22,6 +22,7 @@ import SearchableDropdown from "./components/SearchableDropdown";
 import lottie from "lottie-web";
 import lottieAnimation from "./assets/loading-lottie.json";
 import StatsModal from "./components/StatsModal";
+import { storeScore } from "./utils/storageUtils";
 
 const enum Notices {
   Right = "SUCCESS!! You got it in ",
@@ -253,7 +254,7 @@ function App() {
         setGuesses(prevGuesses => [...prevGuesses, guessToStore]);
         console.log("setting correct guess to ", guesses.length + 1);
         setCorrectGuess(guesses.length + 1);
-        updateScore(guesses.length + 1);
+        storeScore(updateScore(guesses.length + 1));
         storeGuess(guessToStore);
         setNotice(Notices.Right + guesses.length + "!");
         setTimeout(() => {

@@ -12,55 +12,49 @@ export interface Score {
   maxStreak: number;
 }
 
-export const updateScore = (hintsNeeded: number): void => {
-  const isAWin: number = hintsNeeded <= 6 ? 1 : 0;
+export const defaultScore: Score = {
+  "1": 0,
+  "2": 0,
+  "3": 0,
+  "4": 0,
+  "5": 0,
+  "6": 0,
+  "played": 0,
+  "winTotal": 0,
+  "winPercentage": 0,
+  "currentStreak": 0,
+  "maxStreak": 0
+}
 
+export const updateScore = (hintsNeeded: number): Score => {
   const existingScore: Score | null = JSON.parse(
     localStorage.getItem("pokedle_score")
   );
-  if (existingScore) {
-    localStorage.setItem(
-      "pokedle_score",
-      JSON.stringify({
-        1: existingScore[1] + incrementScore(hintsNeeded, 1),
-        2: existingScore[2] + incrementScore(hintsNeeded, 2),
-        3: existingScore[3] + incrementScore(hintsNeeded, 3),
-        4: existingScore[4] + incrementScore(hintsNeeded, 4),
-        5: existingScore[5] + incrementScore(hintsNeeded, 5),
-        6: existingScore[6] + incrementScore(hintsNeeded, 6),
-        played: existingScore.played + 1,
-        winTotal: existingScore.winTotal + isAWin,
-        winPercentage: Math.ceil(
-          ((existingScore.winTotal + isAWin) / (existingScore.played + 1)) * 100
-        ),
-        currentStreak: isAWin ? existingScore.currentStreak + 1 : 0,
-        maxStreak:
-          existingScore.currentStreak + isAWin > existingScore.maxStreak
-            ? existingScore.currentStreak + isAWin
-            : existingScore.maxStreak
-      })
-    );
-  } else {
-    localStorage.setItem(
-      "pokedle_score",
-      JSON.stringify({
-        1: incrementScore(hintsNeeded, 1),
-        2: incrementScore(hintsNeeded, 2),
-        3: incrementScore(hintsNeeded, 3),
-        4: incrementScore(hintsNeeded, 4),
-        5: incrementScore(hintsNeeded, 5),
-        6: incrementScore(hintsNeeded, 6),
-        played: 1,
-        winTotal: isAWin,
-        winPercentage: isAWin === 0 ? 0 : 100,
-        currentStreak: isAWin,
-        maxStreak: isAWin
-      })
-    );
-  }
+
+  const scoreToUse: Score = existingScore || defaultScore;
+  const winIncrement: number = hintsNeeded <= 6 ? 1 : 0;
+
+  return {
+    1: scoreToUse[1] + incrementScore(hintsNeeded, 1),
+    2: scoreToUse[2] + incrementScore(hintsNeeded, 2),
+    3: scoreToUse[3] + incrementScore(hintsNeeded, 3),
+    4: scoreToUse[4] + incrementScore(hintsNeeded, 4),
+    5: scoreToUse[5] + incrementScore(hintsNeeded, 5),
+    6: scoreToUse[6] + incrementScore(hintsNeeded, 6),
+    played: scoreToUse.played + 1,
+    winTotal: scoreToUse.winTotal + winIncrement,
+    winPercentage: Math.ceil(
+      ((scoreToUse.winTotal + winIncrement) / (scoreToUse.played + 1)) * 100
+    ),
+    currentStreak: winIncrement ? scoreToUse.currentStreak + 1 : 0,
+    maxStreak:
+      scoreToUse.currentStreak + winIncrement > scoreToUse.maxStreak
+        ? scoreToUse.currentStreak + winIncrement
+        : scoreToUse.maxStreak
+  };
 };
 
-const incrementScore = (
+export const incrementScore = (
   hintsNeeded: number,
   scoreToIncrement: number
 ): number => {

@@ -122,42 +122,31 @@ export const capitaliseName = (name: string): string => {
   if (!name.includes(" ") && !name.includes("-")) {
     return name.substring(0, 1).toLocaleUpperCase() + name.substring(1);
   }
-  var combinedName = "";
-  if (name.includes(" ")) {
-    var separatedName = name.split(" ");
-    if (separatedName.length > 1) {
-      separatedName.forEach(nameSection => {
-        combinedName =
-          combinedName +
-          nameSection.substring(0, 1).toLocaleUpperCase() +
-          nameSection.substring(1);
-      });
-    }
-  }
-  var nameToUse = combinedName !== "" ? combinedName : name;
-  if (nameToUse.includes("-")) {
-    var separatedDashName = nameToUse.split("-");
+  var nameWithoutSymbols = "";
+  const nameToFormat = name;
+  if (nameToFormat.includes("-")) {
+    var separatedDashName = nameToFormat.split("-");
     if (separatedDashName.length > 1) {
       separatedDashName.forEach((nameSection, index) => {
-        combinedName =
+        nameWithoutSymbols =
           index === 0
-            ? combinedName +
+            ? nameWithoutSymbols +
             nameSection.substring(0, 1).toLocaleUpperCase() +
             nameSection.substring(1)
-            : combinedName +
+            : nameWithoutSymbols +
             "-" +
             nameSection.substring(0, 1).toLocaleUpperCase() +
             nameSection.substring(1);
       });
     }
   }
-  var nameWithoutForme = combinedName.toLocaleLowerCase()
+  var nameWithoutForme = nameWithoutSymbols.toLocaleLowerCase()
     .includes("tapu-")
-    ? combinedName.split("-").join(" ")
-    : combinedName.toLocaleLowerCase().includes("o-o") ||
-      combinedName === "Porygon-Z"
-      ? combinedName
-      : combinedName.split("-", 1)[0];
+    ? nameWithoutSymbols.split("-").join(" ")
+    : nameWithoutSymbols.toLocaleLowerCase().includes("o-o") ||
+      nameWithoutSymbols === "Porygon-Z"
+      ? nameWithoutSymbols
+      : nameWithoutSymbols.split("-", 1)[0];
   return nameWithoutForme;
 };
 

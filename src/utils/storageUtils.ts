@@ -1,3 +1,4 @@
+import { StoredGuess } from "./guessUtils";
 import { Score, defaultScore } from "./scoreUtils";
 
 export const storePokemonNames = (pokemonArray: string[]): void => {
@@ -27,9 +28,14 @@ export const storeScore = (score: Score) => {
 
 export const fetchScoreFromLocalStorage = (): Score => {
   const storedScore = localStorage.getItem("pokedle_score");
-  if (storedScore) {
-    return JSON.parse(storedScore);
-  } else {
-    return defaultScore;
-  }
+  return storedScore ? JSON.parse(storedScore) : defaultScore;
+}
+
+export const storeGuess = (guess: StoredGuess) => {
+  localStorage.setItem("pokedle_todaysGuess", JSON.stringify(guess));
+}
+
+export const fetchGuessFromLocalStorage = (): StoredGuess | null => {
+  const todaysGuess = localStorage.getItem("pokedle_todaysGuess");
+  return todaysGuess ? JSON.parse(todaysGuess) : null;
 }

@@ -107,12 +107,6 @@ export const capitaliseName = (name: string): string => {
   var capitalisedName = "";
   formattedNames.forEach(formattedName => {
     if (formattedName.basic === name) {
-      console.log(
-        "setting name to :",
-        formattedName.formatted,
-        " instead of ",
-        name
-      );
       capitalisedName = formattedName.formatted;
     }
   });

@@ -27,9 +27,8 @@ export const defaultScore: Score = {
 }
 
 export const updateScore = (hintsNeeded: number): Score => {
-  const existingScore: Score | null = JSON.parse(
-    localStorage.getItem("pokedle_score")
-  );
+  const storedScore = localStorage.getItem("pokedle_score");
+  const existingScore: Score | null = storedScore ? JSON.parse(storedScore) : null;
 
   const scoreToUse: Score = existingScore || defaultScore;
   const winIncrement: number = hintsNeeded <= 6 ? 1 : 0;

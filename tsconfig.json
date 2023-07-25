@@ -5,6 +5,9 @@
         "removeComments": true,
         "preserveConstEnums": true,
         "sourceMap": true,
+        "esModuleInterop": true,
+        "noEmit": true,
+        "allowImportingTsExtensions": true,
         "lib": [
             "es2021",
             "dom"

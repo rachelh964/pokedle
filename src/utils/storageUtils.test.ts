@@ -1,5 +1,7 @@
-import { storePokemonNames, fetchPokemonNamesFromStorage, fetchScoreFromLocalStorage, storeScore } from "./storageUtils";
-import { defaultScore } from "./scoreUtils";
+import { storePokemonNames, fetchPokemonNamesFromStorage, fetchScoreFromLocalStorage, storeScore, storeGuess, fetchGuessFromLocalStorage } from "./storageUtils";
+import { defaultScore, updateScore } from "./scoreUtils";
+import { formatGuesses } from "./guessUtils";
+import { dummyGuess, dummyGuesses } from "./guessUtils.test";
 
 var localStorageMock = (function () {
   var store: any = {};
@@ -58,8 +60,29 @@ describe("storageUtils", () => {
     });
 
     it("should return a set score object when one has been stored on localStorage", () => {
-      storeScore(defaultScore);
-      expect(fetchScoreFromLocalStorage()).toEqual(defaultScore);
+      const scoreToStore = updateScore(1);
+      storeScore(scoreToStore);
+      expect(fetchScoreFromLocalStorage()).toEqual(scoreToStore);
+    });
+  });
+
+  describe("storeGuess", () => {
+    it("should store to localStorage when storeGuess is called", () => {
+      const storedGuess = formatGuesses(dummyGuesses, 4, dummyGuess);
+      storeGuess(storedGuess);
+      expect(localStorage.getItem("pokedle_todaysGuess")).toEqual(JSON.stringify(storedGuess));
+    });
+  });
+
+  describe("fetchGuessFromLocalStorage", () => {
+    it("should return a set guess object when one has been stored on localStorage", () => {
+      const storedGuess = formatGuesses(dummyGuesses, 4, dummyGuess);
+      storeGuess(storedGuess);
+      expect(fetchGuessFromLocalStorage()).toEqual(storedGuess);
+    });
+
+    it("should return null when no guess object is stored", () => {
+      expect(fetchGuessFromLocalStorage()).toBeNull();
     });
   });
 });

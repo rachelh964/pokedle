@@ -3,11 +3,6 @@ import { PokemonSpecies, Ability } from "../context/Pokemon";
 import { fetchPokemonNamesFromStorage, storePokemonNames } from "./storageUtils";
 import { capitaliseName } from "./textUtils";
 
-export interface Guess {
-  guess: string;
-  correct: boolean;
-}
-
 interface AllPokemonNamesGraphqlResponse {
   data: {
     pokemon_v2_pokemonspeciesname: [{ name: string }]

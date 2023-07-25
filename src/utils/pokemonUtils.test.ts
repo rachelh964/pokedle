@@ -10,7 +10,7 @@ describe("pokemonUtils", () => {
   it("displayAbilities should list all abilities as expected", () => {
     expect(displayAbilities([])).toEqual("None");
     const expectedDummyAbilities = "Intimidate, Anger Point, Sheer Force";
-    expect(displayAbilities(dummyPokemon.abilities)).toEqual(expectedDummyAbilities)
+    expect(displayAbilities(dummyPokemon.abilities)).toEqual(expectedDummyAbilities);
   });
 
   // Also fetch methods?

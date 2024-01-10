@@ -10,6 +10,8 @@ export interface Score {
   winPercentage: number;
   currentStreak: number;
   maxStreak: number;
+  endlessCurrentStreak: number;
+  endlessMaxStreak: number;
 }
 
 export const defaultScore: Score = {
@@ -23,17 +25,24 @@ export const defaultScore: Score = {
   "winTotal": 0,
   "winPercentage": 0,
   "currentStreak": 0,
-  "maxStreak": 0
+  "maxStreak": 0,
+  "endlessCurrentStreak": 0,
+  "endlessMaxStreak": 0
 }
 
-export const updateScore = (hintsNeeded: number): Score => {
+export const getCurrentScore = (): Score => {
   const storedScore = localStorage.getItem("pokedle_score");
   const existingScore: Score | null = storedScore ? JSON.parse(storedScore) : null;
 
-  const scoreToUse: Score = existingScore || defaultScore;
+  return existingScore || defaultScore;
+}
+
+export const updateScore = (hintsNeeded: number): Score => {
+  const scoreToUse: Score = getCurrentScore();
   const winIncrement: number = hintsNeeded <= 6 ? 1 : 0;
 
   return {
+    ...scoreToUse,
     1: scoreToUse[1] + incrementScore(hintsNeeded, 1),
     2: scoreToUse[2] + incrementScore(hintsNeeded, 2),
     3: scoreToUse[3] + incrementScore(hintsNeeded, 3),
@@ -53,9 +62,19 @@ export const updateScore = (hintsNeeded: number): Score => {
   };
 };
 
-export const incrementScore = (
+const incrementScore = (
   hintsNeeded: number,
   scoreToIncrement: number
 ): number => {
   return hintsNeeded === scoreToIncrement ? 1 : 0;
 };
+
+export const updateEndlessScore = (win: boolean): Score => {
+  const scoreToUse: Score = getCurrentScore();
+
+  return {
+    ...scoreToUse,
+    endlessCurrentStreak: win ? scoreToUse.endlessCurrentStreak + 1 : 0,
+    endlessMaxStreak: win ? Math.max(scoreToUse.endlessCurrentStreak + 1, scoreToUse.endlessMaxStreak) : scoreToUse.endlessMaxStreak
+  };
+}

@@ -1,11 +1,14 @@
 import React, { useEffect, useRef, useState } from "react";
+import { BsCheckLg } from "react-icons/bs";
+import { Button, Input } from "../styles";
 
 const SearchableDropdown = ({
   options,
   id,
   selectedGuess,
   handleChange,
-  submitGuess
+  submitGuess,
+  theme
 }) => {
   const [query, setQuery] = useState("");
   const [isOpen, setIsOpen] = useState(false);
@@ -44,7 +47,7 @@ const SearchableDropdown = ({
     <div className="dropdown">
       <div className="control">
         <div className="selected-value">
-          <input
+          <Input
             ref={inputRef}
             type="text"
             value={getDisplayValue()}
@@ -59,15 +62,17 @@ const SearchableDropdown = ({
               (submitGuess(), setQuery(""), handleChange(null))
             }
             id={id}
+            autoComplete="off"
           />
         </div>
         <div className={`arrow ${isOpen ? "open" : ""}`}></div>
-        <input
+        <Button
           className="input-button"
           type="submit"
           onClick={() => (submitGuess(), setQuery(""), handleChange(null))}
-          value={"\u21B5"}
-        ></input>
+        >
+          <BsCheckLg color={theme.secondary} />
+        </Button>
       </div>
 
       {filter(options).length > 0 && (
@@ -77,9 +82,8 @@ const SearchableDropdown = ({
               return (
                 <div
                   onClick={() => selectOption(option)}
-                  className={`option ${
-                    option === selectedGuess ? "selected" : ""
-                  }`}
+                  className={`option ${option === selectedGuess ? "selected" : ""
+                    }`}
                   key={`${id}-${index}`}
                 >
                   {option}

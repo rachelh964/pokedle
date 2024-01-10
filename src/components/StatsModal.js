@@ -1,23 +1,33 @@
 import React from "react";
 import { fetchScoreFromLocalStorage } from "../utils/storageUtils";
+import { DistributionBar, TitleTableRow } from "../styles";
 
-const maxDistributionScore = (distribution) => {
+export const maxDistributionScore = (distribution) => {
   distribution.sort((a, b) => {
     return b - a;
   });
   return distribution[0];
 }
 
+const StatDistribution = (score, i, iString) => {
+  return (
+    <div className="stat-distribution" key={"stat-" + i}>
+      <p className="stat-distribution-label">{i}</p>
+      <div className="distribution-bar-container">
+        <DistributionBar className="distribution-bar">
+          <p>{score[iString]}</p>
+        </DistributionBar>
+      </div>
+    </div>
+  );
+}
+
 const guessNumberDistributionElement = (score) => {
   let guessNumDist = [];
-  const maxScore = maxDistributionScore([score["1"], score["2"], score["3"], score["4"], score["5"], score["6"]]);
   for (let i = 1; i <= 6; i++) {
     let iString = i.toString();
-    const width = (score[iString] / maxScore) * 100;
-    console.log("width of ", i, iString, score[iString], width);
-    guessNumDist.push(<div className="stat-distribution" key={"stat-" + i}><p>{i}</p><div className="distribution-bar" style={{ width: width.toString() + "%" }}><p>{score[iString]}</p></div></div>);
+    guessNumDist.push(StatDistribution(score, i, iString));
   }
-  console.log("element", guessNumDist);
   return <ul>{guessNumDist}</ul>;
 }
 
@@ -26,14 +36,14 @@ const StatsModal = () => {
 
   return (
     <div className="stats-modal">
-      <h3>Statistics</h3>
+      <h3>Statistics - Daily Mode</h3>
       <table>
         <thead>
-          <tr>
+          <TitleTableRow>
             <th>Rounds played</th>
             <th>Win Percentage</th>
             <th>Win Total</th>
-          </tr>
+          </TitleTableRow>
         </thead>
         <tbody>
           <tr>
@@ -45,21 +55,39 @@ const StatsModal = () => {
       </table>
 
       <div className="stats-distribution">
-        <p>Guess distribution</p>
         {guessNumberDistributionElement(score)}
       </div>
 
       <table>
         <thead>
-          <tr>
+          <TitleTableRow>
             <th>Current Streak</th>
             <th>Max Streak</th>
-          </tr>
+          </TitleTableRow>
         </thead>
         <tbody>
           <tr>
             <td>{score.currentStreak}</td>
             <td>{score.maxStreak}</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <br />
+      <br />
+
+      <h3>Statistics - Endless Mode</h3>
+      <table>
+        <thead>
+          <TitleTableRow>
+            <th>Current Streak</th>
+            <th>Max Streak</th>
+          </TitleTableRow>
+        </thead>
+        <tbody>
+          <tr>
+            <td>{score.endlessCurrentStreak}</td>
+            <td>{score.endlessMaxStreak}</td>
           </tr>
         </tbody>
       </table>

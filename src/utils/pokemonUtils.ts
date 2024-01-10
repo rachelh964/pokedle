@@ -11,8 +11,7 @@ interface AllPokemonNamesGraphqlResponse {
 
 export const getPokemonCount = (): number => {
   /** 
-   * pokeapi doesn't have descriptions for gen 9 just yet, from 906
-   * so will set the total count at 905
+   * total number is 1010, but last two are DLC and don't have dex descriptions
    */
   // setTimeout(() => {
   //   let pokemonNamesCount: number;
@@ -22,7 +21,7 @@ export const getPokemonCount = (): number => {
   //   });
   //   return pokemonNamesCount;
   // }, 2000);
-  return 905;
+  return 1008;
 };
 
 export const fetchAllPokemonNamesBackup = (): string[] => {
@@ -47,9 +46,9 @@ export const fetchAllPokemonNamesBackup = (): string[] => {
 };
 
 export const getDescription = (pokemon: PokemonSpecies): string => {
-  const descriptions = pokemon.flavorTextEntries.reverse();
+  const descriptions = pokemon.flavorTextEntries.slice();
   let description = "";
-  descriptions.some(flavorText => {
+  descriptions.reverse().some(flavorText => {
     if (flavorText.language.name === "en") {
       description = flavorText.flavorText;
       return true;

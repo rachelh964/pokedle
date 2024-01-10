@@ -15,6 +15,13 @@ export const PopoverContainer = styled.div`
 
 export const Button = styled.div`
   background-color: ${props => props.theme.primary};
+  cursor: pointer;
+`
+
+export const SecondaryButton = styled.div`
+  background-color: ${props => props.theme.secondary};
+  cursor: pointer;
+  color: ${props => props.theme.text};
 `
 
 export const InputButton = styled.input`

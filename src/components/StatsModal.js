@@ -36,7 +36,7 @@ const StatsModal = () => {
 
   return (
     <div className="stats-modal">
-      <h3>Statistics</h3>
+      <h3>Statistics - Daily Mode</h3>
       <table>
         <thead>
           <TitleTableRow>
@@ -69,6 +69,25 @@ const StatsModal = () => {
           <tr>
             <td>{score.currentStreak}</td>
             <td>{score.maxStreak}</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <br />
+      <br />
+
+      <h3>Statistics - Endless Mode</h3>
+      <table>
+        <thead>
+          <TitleTableRow>
+            <th>Current Streak</th>
+            <th>Max Streak</th>
+          </TitleTableRow>
+        </thead>
+        <tbody>
+          <tr>
+            <td>{score.endlessCurrentStreak}</td>
+            <td>{score.endlessMaxStreak}</td>
           </tr>
         </tbody>
       </table>

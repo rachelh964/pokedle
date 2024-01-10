@@ -134,7 +134,11 @@ p {
   margin: 6px;
   min-width: 32px;
   min-height: 32px;
+
   // border-radius: 16px
+  p {
+    margin: 0;
+  }
 }
 
 .button:hover {
@@ -156,6 +160,17 @@ p {
   color: #ffffffa6;
   // background-color: #9b4bff22;
   padding: 12px 24px 12px;
+}
+
+.popover-button-container {
+  display: flex;
+  justify-content: space-evenly;
+
+  div {
+    min-width: 30%;
+    padding: 2px;
+    border: 1px solid #ccc;
+  }
 }
 
 .daily-toggle {

@@ -12,7 +12,7 @@ import {
 } from "./utils/pokemonUtils";
 import { formatHeight, formatWeight, trimDescription } from "./utils/textUtils";
 import { fetchPokemon, fetchPokemonSpecies } from "./utils/fetchUtils";
-import { updateScore } from "./utils/scoreUtils"
+import { getCurrentScore, updateEndlessScore, updateScore } from "./utils/scoreUtils"
 import SearchableDropdown from "./components/SearchableDropdown";
 
 import lottie from "lottie-web";
@@ -22,7 +22,7 @@ import { fetchGuessFromLocalStorage, fetchScoreFromLocalStorage, fetchThemeFromL
 import { InfoPopover } from "./components/InfoPopover";
 import { getNewTheme } from "./utils/themeUtils";
 import { ThemeProvider } from "styled-components";
-import { Button, Input, InputButton, PopoverContainer, PopoverContent, Toolbar } from "./styles";
+import { Button, Input, InputButton, PopoverContainer, PopoverContent, SecondaryButton, Toolbar } from "./styles";
 import { BsGearFill, BsFillXSquareFill, BsArrowClockwise, BsCheckLg, BsBarChartLineFill } from "react-icons/bs";
 
 const enum Notices {
@@ -31,7 +31,7 @@ const enum Notices {
   AttemptedGuessAfterSuccess = "You've already got it dude, take the win.",
   NoInputGuess = "Skipped",
   OutOfGuesses = "Aww, better luck next time! The correct answer was ",
-  AttemptedGuessAfterFailure = "Sorry, you're out of guesses. Try out practice mode, or come back tomorrow!",
+  AttemptedGuessAfterFailure = "Sorry, you're out of guesses. Try out endless mode, or come back tomorrow!"
 }
 
 function App() {
@@ -46,6 +46,7 @@ function App() {
   const [correctGuess, setCorrectGuess] = useState(-1);
   const [error, setError] = useState("");
   const [notice, setNotice] = useState("");
+  const [interactiveNotice, setInteractiveNotice] = useState("");
   const [showInfo, setShowInfo] = useState(false);
   const [showStats, setShowStats] = useState(false);
   const [outOfGuesses, setOutOfGuesses] = useState(false);
@@ -64,6 +65,8 @@ function App() {
   const [listOfPokemonNames, setListOfPokemonNames] = useState<string[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [theme, setTheme] = useState(fetchThemeFromLocalStorage());
+
+  const confirmResetNotice = `Are you sure you want to reset? This will reset your current endless mode streak of ${getCurrentScore().endlessCurrentStreak} back to 0.`;
 
   var seedrandom = require('seedrandom');
 
@@ -137,7 +140,7 @@ function App() {
             setNewPokemonNumber(rngBasedOnDate, pokemonCount);
           }
         } else {
-          /** Set up for practice mode - but DON'T generate the same as today's daily pokemon */
+          /** Set up for endless mode - but DON'T generate the same as today's daily pokemon */
           let pokemonNum: number = 0;
           const dailyNum: number = prevGuess === null ? 0 : prevGuess.number;
           do {
@@ -208,7 +211,7 @@ function App() {
     }
   }, [pokemon, pokemonSpecies, pokemonNumber, listOfPokemonNames, pokemonListFetched, isDailyVersion]);
 
-  const reset = () => {
+  const reset = (resetEndlessStreak?: boolean) => {
     setIsLoading(true);
     setPokemon(undefined);
     setPokemonName("")
@@ -226,6 +229,8 @@ function App() {
     setPokemonFetched(false);
     setPokemonSpeciesFetched(false);
     setSelectedGuess("");
+    setInteractiveNotice("");
+    resetEndlessStreak && storeScore(updateEndlessScore(false));
   };
 
   const animateShowStats = () => {
@@ -267,6 +272,8 @@ function App() {
           setTimeout(() => {
             setShowStats(true);
           }, 2000);
+        } else {
+          storeScore(updateEndlessScore(true));
         }
       } else {
         if (guesses.length <= 5) {
@@ -285,6 +292,9 @@ function App() {
               setTimeout(() => {
                 setShowStats(true);
               }, 2000);
+            }
+            else {
+              storeScore(updateEndlessScore(false));
             }
           }
           // if (guess.length === 0) {
@@ -364,7 +374,7 @@ function App() {
             {showStats ? <BsFillXSquareFill color={theme.secondary} /> : <BsBarChartLineFill color={theme.secondary} />}
           </Button>
           <h2 className="title">POKÉDLE - {" "}
-            <span className="link" onClick={() => setIsDailyVersion(!isDailyVersion)}>{isDailyVersion ? `DAILY` : `PRACTICE`}</span></h2>
+            <span className="link" onClick={() => setIsDailyVersion(!isDailyVersion)}>{isDailyVersion ? `DAILY` : `ENDLESS`}</span></h2>
           <Button
             className="info-button button"
             onClick={() => setShowInfo(!showInfo)}
@@ -446,7 +456,7 @@ function App() {
                   )}
                 </>
               )}
-              {!isDailyVersion && <Button className="input-button" onClick={reset}><BsArrowClockwise color={theme.secondary} /></Button>}
+              {!isDailyVersion && <Button className="input-button" onClick={() => correctGuess === -1 && !outOfGuesses ? setInteractiveNotice(confirmResetNotice) : reset()}><BsArrowClockwise color={theme.secondary} /></Button>}
             </div>
 
             <table className="guesses-list">
@@ -457,6 +467,17 @@ function App() {
               <PopoverContainer className="popover-container">
                 <PopoverContent className="popover-content">
                   <p>{notice}</p>
+                </PopoverContent>
+              </PopoverContainer>
+            )}
+            {interactiveNotice !== "" && (
+              <PopoverContainer className="popover-container">
+                <PopoverContent className="popover-content">
+                  <p>{interactiveNotice}</p>
+                  <div className="popover-button-container">
+                    <Button className="button" onClick={() => setInteractiveNotice("")}><p>No</p></Button>
+                    <SecondaryButton className="button" onClick={() => reset(true)}><p>Yes</p></SecondaryButton>
+                  </div>
                 </PopoverContent>
               </PopoverContainer>
             )}

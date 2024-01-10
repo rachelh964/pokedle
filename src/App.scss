@@ -1,7 +1,7 @@
 .App {
   text-align: center;
-  background: black;
-  color: white;
+  background: #121212;
+  color: #ffffffcc;
   height: 100vh;
   width: 100vw;
   display: flex;
@@ -14,7 +14,6 @@ p {
 }
 
 .toolbar {
-  border-bottom: 2px solid grey;
   display: flex;
   flex-direction: row;
   justify-content: center;
@@ -37,7 +36,8 @@ p {
 
 .stats-modal {
   h3 {
-    margin: 12px;
+    padding: 0 12px 12px;
+    margin: 0;
   }
 
   table {
@@ -89,19 +89,27 @@ p {
         flex-direction: row;
         //place-content: space-evenly;
 
-        p {
+        .stat-distribution-label {
           margin: 2px;
+          width: 10px;
         }
 
-        .distribution-bar {
-          background-color: rgba(255, 255, 255, 0.6);
-          min-width: 16px;
-          border: 2px solid;
-          border-color: rgba(0, 0, 0, 0.5);
-          margin: 1px 4px;
+        .distribution-bar-container {
+          width: 100%;
 
-          p {
-            margin: 0;
+          .distribution-bar {
+            width: 16px;
+            min-width: 16px;
+            border: 2px solid;
+            border-color: rgba(0, 0, 0, 0.5);
+            margin: 1px 4px;
+            transition: width 1500ms ease-in-out;
+
+            p {
+              margin: 0;
+              text-shadow: 0.5px 0.5px 1px black;
+              padding-bottom: 2px;
+            }
           }
         }
       }
@@ -118,23 +126,36 @@ p {
 }
 
 .button {
-  /* position: absolute; */
   padding: 8px;
-  border: 2px solid grey;
+  display: flex;
+  justify-content: center;
+  align-items: center;
   font-size: x-large;
   margin: 6px;
-  width: 28.5px;
+  min-width: 32px;
+  min-height: 32px;
+  // border-radius: 16px
 }
 
-.popover {
-  color: white;
+.button:hover {
+  cursor: pointer;
+  opacity: 0.8;
+}
+
+.popover-container {
   width: 40vw;
   left: calc(30vw - 24px);
-  background: black;
-  border: 2px solid grey;
-  padding: 0 24px;
+  background: #121212;
   position: absolute;
   z-index: 1;
+  max-height: calc(100vh - 64px);
+  overflow: auto;
+}
+
+.popover-content {
+  color: #ffffffa6;
+  // background-color: #9b4bff22;
+  padding: 12px 24px 12px;
 }
 
 .daily-toggle {
@@ -145,8 +166,19 @@ p {
 .info,
 .stats {
   top: 60px;
-  left: 30vw;
   font-size: large;
+}
+
+.stats {
+  left: 3vw;
+}
+
+.info {
+  left: 50vw;
+
+  p {
+    margin: 16px 0;
+  }
 }
 
 .main-container {
@@ -154,12 +186,12 @@ p {
   height: 85vh;
 }
 
-.guesses-list {
-  margin: auto;
+.description {
+  margin-top: 0;
 }
 
-tr {
-  border-bottom: 1px solid white;
+.guesses-list {
+  margin: auto;
 }
 
 .guess {
@@ -175,9 +207,11 @@ tr {
 }
 
 .input-button {
-  background: black;
   color: #ffffff;
-  font-size: x-large;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: large;
   line-height: 42px;
   height: 42px;
   width: 42px;
@@ -202,15 +236,14 @@ tr {
 .dropdown .selected-value input {
   line-height: 1.5;
   font-size: 1rem;
-  background-color: #424242;
   border: 1px solid #ccc;
   border-radius: 2px;
   box-sizing: border-box;
   cursor: default;
   outline: none;
-  padding: 8px 52px 8px 10px;
-  transition: all 200ms ease;
-  width: 20vw;
+  padding: 9px 52px 9px 10px;
+  transition: all 150ms ease;
+  width: 25vw;
   color: white;
 }
 
@@ -225,7 +258,7 @@ tr {
   overflow-y: auto;
   position: absolute;
   bottom: 100%;
-  width: 20vw;
+  width: 25vw;
   -webkit-overflow-scrolling: touch;
 }
 
@@ -253,10 +286,47 @@ tr {
   color: #ffffff;
 }
 
+.link {
+  cursor: pointer;
+  text-decoration: underline;
+}
+
+.link:hover {
+  opacity: 0.8;
+}
+
 @media screen and (max-width: 800px) {
-  .popover {
-    width: 80vw;
-    left: 3vw;
+  p {
+    font-size: medium;
+    margin: 12px 0;
+  }
+
+  .button {
+    min-width: 24px;
+    min-height: 24px;
+  }
+
+  .stats-modal {
+    font-size: medium;
+
+    table {
+      th {
+        font-weight: 500;
+      }
+
+      tbody {
+        tr {
+          td {
+            font-size: large;
+          }
+        }
+      }
+    }
+  }
+
+  .popover-container {
+    width: 74vw;
+    left: 6.5vw;
   }
 
   .dropdown .selected-value input {
@@ -266,23 +336,17 @@ tr {
   .dropdown .options {
     width: 60vw;
   }
+
+  .guess {
+    font-size: small;
+    margin: 0;
+  }
 }
 
 @media (prefers-reduced-motion: no-preference) {
   .App-logo {
     animation: App-logo-spin infinite 20s linear;
   }
-}
-
-.App-header {
-  background-color: #282c34;
-  min-height: 100vh;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  font-size: calc(10px + 2vmin);
-  color: white;
 }
 
 .App-link {

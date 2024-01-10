@@ -6,6 +6,7 @@ import { Guess, formatGuesses } from "./utils/guessUtils";
 import {
   displayAbilities,
   fetchAllPokemonNames,
+  getDescription,
   getPokemonCount,
   simplifyPokemonName,
 } from "./utils/pokemonUtils";
@@ -16,8 +17,13 @@ import SearchableDropdown from "./components/SearchableDropdown";
 
 import lottie from "lottie-web";
 import lottieAnimation from "./assets/loading-lottie.json";
-import StatsModal from "./components/StatsModal";
-import { fetchGuessFromLocalStorage, storeGuess, storeScore } from "./utils/storageUtils";
+import StatsModal, { maxDistributionScore } from "./components/StatsModal";
+import { fetchGuessFromLocalStorage, fetchScoreFromLocalStorage, fetchThemeFromLocalStorage, storeGuess, storeScore } from "./utils/storageUtils";
+import { InfoPopover } from "./components/InfoPopover";
+import { getNewTheme } from "./utils/themeUtils";
+import { ThemeProvider } from "styled-components";
+import { Button, Input, InputButton, PopoverContainer, PopoverContent, Toolbar } from "./styles";
+import { BsGearFill, BsFillXSquareFill, BsArrowClockwise, BsCheckLg, BsBarChartLineFill } from "react-icons/bs";
 
 const enum Notices {
   Right = "SUCCESS!! You got it in ",
@@ -57,6 +63,7 @@ function App() {
   const [selectedGuess, setSelectedGuess] = useState("");
   const [listOfPokemonNames, setListOfPokemonNames] = useState<string[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(true);
+  const [theme, setTheme] = useState(fetchThemeFromLocalStorage());
 
   var seedrandom = require('seedrandom');
 
@@ -68,7 +75,7 @@ function App() {
       if (pokemonFetched && pokemonSpeciesFetched && pokemonListFetched) {
         setIsLoading(false);
       }
-    }, 2000);
+    }, 1000);
   }, [pokemonFetched, pokemonSpeciesFetched, pokemonListFetched]);
 
   /**
@@ -170,7 +177,10 @@ function App() {
         return false;
       });
       if (redactedDescription === "") {
-        setRedactedDescription(trimDescription(pokemonSpecies, listOfPokemonNames));
+        const descriptionToShow = correctGuess !== -1 || outOfGuesses ?
+          getDescription(pokemonSpecies) :
+          trimDescription(pokemonSpecies, listOfPokemonNames);
+        setRedactedDescription(descriptionToShow);
       }
       setSprite(pokemon.sprites.other.officialArtwork.frontDefault);
       const gen = pokemonSpecies.generation.url.split("/");
@@ -218,6 +228,18 @@ function App() {
     setSelectedGuess("");
   };
 
+  const animateShowStats = () => {
+    const score = fetchScoreFromLocalStorage();
+
+    const bars = Array.from(document.getElementsByClassName('distribution-bar'));
+    const maxScore = maxDistributionScore([score["1"], score["2"], score["3"], score["4"], score["5"], score["6"]]);
+
+    bars.forEach((bar, index) => {
+      const distributionBasedWidth = (score[(index + 1).toString()] / maxScore) * 100;
+      setTimeout(() => { bar.setAttribute('style', `width: calc(${distributionBasedWidth}% - 2%);`) }, 150 * (index));
+    });
+  }
+
   const submitGuess = () => {
     let input: HTMLInputElement = document.getElementById(
       "guess"
@@ -231,16 +253,17 @@ function App() {
       if (
         simplifyPokemonName(guess).toLocaleLowerCase() ===
         (simplifyPokemonName(pokemonName).toLocaleLowerCase() ||
-          simplifyPokemonName(pokemon?.name).toLocaleLowerCase())
+          (pokemon?.name && simplifyPokemonName(pokemon.name).toLocaleLowerCase()))
       ) {
         guessToStore = { guess: pokemonName, correct: true };
         setGuesses(prevGuesses => [...prevGuesses, guessToStore]);
         console.log("setting correct guess to ", guesses.length + 1);
         setCorrectGuess(guesses.length + 1);
         setNotice(Notices.Right + (guesses.length + 1) + "!");
+        pokemonSpecies && setRedactedDescription(getDescription(pokemonSpecies));
         storeGuess(formatGuesses(guesses, pokemonNumber, guessToStore));
         if (isDailyVersion) {
-          storeScore(updateScore(guesses.length + 1));
+          storeScore(updateScore(guesses.length));
           setTimeout(() => {
             setShowStats(true);
           }, 2000);
@@ -253,9 +276,10 @@ function App() {
               : { guess: guess, correct: false };
           setGuesses([...guesses, guessToStore]);
           storeGuess(formatGuesses(guesses, pokemonNumber, guessToStore));
-          if (guesses.length >= 5) {
+          if (guesses.length >= 6) {
             setOutOfGuesses(true);
             setNotice(Notices.OutOfGuesses + pokemonName + ".");
+            pokemonSpecies && setRedactedDescription(getDescription(pokemonSpecies));
             if (isDailyVersion) {
               storeScore(updateScore(7));
               setTimeout(() => {
@@ -317,6 +341,12 @@ function App() {
     }
   }, [isDailyVersion]);
 
+  useEffect(() => {
+    if (showStats) {
+      setTimeout(() => { animateShowStats() }, 1);
+    }
+  }, [showStats])
+
   if (error) {
     return <div>{error}</div>;
   }
@@ -324,133 +354,119 @@ function App() {
   //   return (<div><div id="loader" style={{ display: (isLoading ? "" : "none") }} /></div>)
   // }
   return (
-    <div className="App" id="app">
-      <div className="toolbar">
-        <div
-          className="stats-button button"
-          onMouseEnter={() => setShowStats(true)}
-          onClick={() => setShowStats(!showStats)}
-        >
-          {showStats ? `x` : <>&#9745;</>}
-        </div>
-        <h2 className="title">POKÉDLE - {" "}
-          <span style={{ cursor: "pointer", textDecoration: "underline" }} onClick={() => setIsDailyVersion(!isDailyVersion)}>{isDailyVersion ? `DAILY` : `PRACTICE`}</span></h2>
-        <div
-          className="info-button button"
-          onMouseEnter={() => setShowInfo(true)}
-          onClick={() => setShowInfo(!showInfo)}
-        >
-          <span>{showInfo ? `x` : <>&#x2699;</>}</span>
-        </div>
-        {showInfo && (
-          <div className="info popover"
-            onMouseLeave={() => setShowInfo(false)}>
-            <p>Generations 1-8 supported (Dex numbers 0001-0905)</p>
-            <p>
-              Gender symbols in guesses have been replaced by M/F as
-              appropriate. eg, `[pokemonName]M` will be accepted for
-              `[pokemonName]♂`
-            </p>
-            <p>
-              All other symbols will be ignored. eg, a pokemon name with a -
-              will be accepted without the - included
-            </p>
-            <p>
-              Pokémon with formes will have the formes dropped from their
-              name. eg, `[pokemonName]` will be accepted for `[pokemonName] -
-              [formeName]`
-            </p>
-            <p>Data provided by pokedex-api</p>
+    <ThemeProvider theme={theme}>
+      <div className="App" id="app">
+        <Toolbar className="toolbar">
+          <Button
+            className="stats-button button"
+            onClick={() => setShowStats(!showStats)}
+          >
+            {showStats ? <BsFillXSquareFill color={theme.secondary} /> : <BsBarChartLineFill color={theme.secondary} />}
+          </Button>
+          <h2 className="title">POKÉDLE - {" "}
+            <span className="link" onClick={() => setIsDailyVersion(!isDailyVersion)}>{isDailyVersion ? `DAILY` : `PRACTICE`}</span></h2>
+          <Button
+            className="info-button button"
+            onClick={() => setShowInfo(!showInfo)}
+          >
+            {showInfo ? <BsFillXSquareFill color={theme.secondary} /> : <BsGearFill color={theme.secondary} />}
+          </Button>
+          {showInfo && (
+            <InfoPopover updateTheme={() => setTheme(getNewTheme(theme))} />
+          )}
+          {showStats && (
+            <PopoverContainer className="stats popover-container">
+              <PopoverContent className="popover-content">
+                <StatsModal />
+              </PopoverContent>
+            </PopoverContainer>
+          )}
+        </Toolbar>
+
+        {isLoading ? (
+          <div>
+            <div id="loader" />
           </div>
-        )}
-        {showStats && (
-          <div className="stats popover"
-            onMouseLeave={() => setShowStats(false)}>
-            <StatsModal />
+        ) : (
+          <div className="main-container">
+            <p className="description">{redactedDescription}</p>
+            {guesses.length >= 1 && (correctGuess === -1 || correctGuess > 1) && (
+              <p>
+                Height: {height} - Weight: {weight}
+              </p>
+            )}
+            {guesses.length >= 2 && (correctGuess === -1 || correctGuess > 2) && <p>Generation: {generation}</p>}
+            {guesses.length >= 3 && (correctGuess === -1 || correctGuess > 3) && (
+              <p>
+                Abilities:{" "}
+                {pokemon?.abilities && displayAbilities(pokemon.abilities)}
+              </p>
+            )}
+            {guesses.length >= 4 && (correctGuess === -1 || correctGuess > 4) && (
+              <p>
+                Colour:{" "}
+                {pokemonSpecies?.color &&
+                  pokemonSpecies.color.name.charAt(0).toUpperCase() +
+                  pokemonSpecies.color.name.slice(1)}
+              </p>
+            )}
+            {guesses.length >= 5 && (correctGuess === -1 || correctGuess > 5) && <p>Species: {species}</p>}
+            <div className="input-div">
+              {!outOfGuesses && correctGuess < 0 && (
+                <>
+                  {listOfPokemonNames && listOfPokemonNames.length > 2 ? (
+                    <>
+                      <SearchableDropdown
+                        options={listOfPokemonNames}
+                        id="guess"
+                        selectedGuess={selectedGuess}
+                        handleChange={sel => setSelectedGuess(sel)}
+                        submitGuess={submitGuess}
+                        theme={theme}
+                      />
+                    </>
+                  ) : (
+                    <>
+                      <Input
+                        type="text"
+                        id="guess"
+                        name="guess"
+                        onKeyDown={e => e.key === "Enter" && submitGuess()}
+                        autoComplete="off"
+                      ></Input>
+                      <InputButton
+                        className="input-button"
+                        type="submit"
+                        onClick={submitGuess}
+                        disabled={outOfGuesses}
+                      >
+                        <BsCheckLg color={theme.secondary} />
+                      </InputButton>
+                    </>
+                  )}
+                </>
+              )}
+              {!isDailyVersion && <Button className="input-button" onClick={reset}><BsArrowClockwise color={theme.secondary} /></Button>}
+            </div>
+
+            <table className="guesses-list">
+              <thead><tr><th>Guesses</th><th>{"\u2714"} / {"\u2718"}</th></tr></thead>
+              <tbody>{displayGuesses()}</tbody>
+            </table>
+            {notice !== "" && (
+              <PopoverContainer className="popover-container">
+                <PopoverContent className="popover-content">
+                  <p>{notice}</p>
+                </PopoverContent>
+              </PopoverContainer>
+            )}
+            {(outOfGuesses || correctGuess > -1) && (
+              <img className="sprite" src={sprite || ""} alt={pokemonName} />
+            )}
           </div>
         )}
       </div>
-
-      {isLoading ? (
-        <div>
-          <div id="loader" style={{ display: (isLoading ? "" : "none") }} />
-        </div>
-      ) : (
-        <div className="main-container">
-          <p>{redactedDescription}</p>
-          {guesses.length >= 1 && (correctGuess === -1 || correctGuess > 1) && (
-            <p>
-              Height: {height} - Weight: {weight}
-            </p>
-          )}
-          {guesses.length >= 2 && (correctGuess === -1 || correctGuess > 2) && <p>Generation: {generation}</p>}
-          {guesses.length >= 3 && (correctGuess === -1 || correctGuess > 3) && (
-            <p>
-              Abilities:{" "}
-              {pokemon?.abilities && displayAbilities(pokemon.abilities)}
-            </p>
-          )}
-          {guesses.length >= 4 && (correctGuess === -1 || correctGuess > 4) && (
-            <p>
-              Colour:{" "}
-              {pokemonSpecies?.color &&
-                pokemonSpecies.color.name.charAt(0).toUpperCase() +
-                pokemonSpecies.color.name.slice(1)}
-            </p>
-          )}
-          {guesses.length >= 5 && (correctGuess === -1 || correctGuess > 5) && <p>Species: {species}</p>}
-          <div className="input-div">
-            {!outOfGuesses && correctGuess < 0 && (
-              <>
-                {listOfPokemonNames && listOfPokemonNames.length > 2 ? (
-                  <>
-                    <SearchableDropdown
-                      options={listOfPokemonNames}
-                      id="guess"
-                      selectedGuess={selectedGuess}
-                      handleChange={sel => setSelectedGuess(sel)}
-                      submitGuess={submitGuess}
-                    />
-                    {/* {!isDailyVersion && <input className="input-button" onClick={reset} type="button" value={"\u21BB"} />} */}
-                  </>
-                ) : (
-                  <>
-                    <input
-                      type="text"
-                      id="guess"
-                      name="guess"
-                      onKeyDown={e => e.key === "Enter" && submitGuess()}
-                      autoComplete="off"
-                    ></input>
-                    <input
-                      className="input-button"
-                      type="submit"
-                      onClick={submitGuess}
-                      disabled={outOfGuesses}
-                      value={"\u21B5"}
-                    ></input>
-                  </>
-                )}
-              </>
-            )}
-            {!isDailyVersion && <input className="input-button" onClick={reset} type="button" value={"\u21BB"} />}
-          </div>
-
-          <table className="guesses-list">
-            <thead><tr><th>Guesses</th><th>{"\u2714"} / {"\u2718"}</th></tr></thead>
-            <tbody>{displayGuesses()}</tbody>
-          </table>
-          {notice !== "" && (
-            <div className="popover">
-              <p>{notice}</p>
-            </div>
-          )}
-          {(outOfGuesses || correctGuess > -1) && (
-            <img className="sprite" src={sprite || ""} alt={pokemonName} />
-          )}
-        </div>
-      )}
-    </div>
+    </ThemeProvider >
   );
 }
 

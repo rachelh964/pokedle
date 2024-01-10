@@ -1,5 +1,6 @@
 import { StoredGuess } from "./guessUtils";
 import { Score, defaultScore } from "./scoreUtils";
+import { Theme, Themes } from "./themeUtils";
 
 export const storePokemonNames = (pokemonArray: string[]): void => {
   localStorage.setItem(
@@ -38,4 +39,13 @@ export const storeGuess = (guess: StoredGuess) => {
 export const fetchGuessFromLocalStorage = (): StoredGuess | null => {
   const todaysGuess = localStorage.getItem("pokedle_todaysGuess");
   return todaysGuess ? JSON.parse(todaysGuess) : null;
+}
+
+export const storeTheme = (theme: Theme) => {
+  localStorage.setItem("pokedle_theme", JSON.stringify(theme));
+}
+
+export const fetchThemeFromLocalStorage = (): Theme => {
+  const theme = localStorage.getItem("pokedle_theme");
+  return theme ? JSON.parse(theme) : Themes[0];
 }

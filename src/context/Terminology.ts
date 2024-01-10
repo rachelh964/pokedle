@@ -25,6 +25,19 @@ export const regions = [
   "Paldea"
 ];
 
+export const regionalIdentifiers = [
+  "Kantonian",
+  "Johtonian",
+  "Hoennian",
+  "Sinnohan",
+  "Unovan",
+  "Kalosian",
+  "Alolan",
+  "Galarian",
+  "Hisuian",
+  "Paldean"
+];
+
 export const locations = [
   "Melemele",
   "Akala",

@@ -1,5 +1,5 @@
 import { PokemonSpecies } from "../context/Pokemon";
-import { formattedNames, identifiableTerms, locations, regions } from "../context/Terminology";
+import { formattedNames, identifiableTerms, locations, regionalIdentifiers, regions } from "../context/Terminology";
 import { getDescription } from "./pokemonUtils";
 
 interface Redactor {
@@ -19,6 +19,10 @@ const redactors: Redactors = {
   pokemonRedactor: {
     main: "[POKÉMON]",
     escaped: "\\[POKÉMON\\]"
+  },
+  regionalIdentifierRedactor: {
+    main: "[REGIONAL IDENTIFIER]",
+    escaped: "\\[REGIONAL IDENTIFIER\\]"
   },
   regionRedactor: {
     main: "[REGION]",
@@ -91,6 +95,9 @@ export const trimDescription = (pokemon: PokemonSpecies, allPokemonNames: string
     if (indexOfTerm !== -1) {
       description = hideAAndAnGiveaways(replaceAt(description, indexOfTerm, redactors.defaultRedactor.main, term.length));
     }
+  });
+  regionalIdentifiers.forEach(regionalIdentifier => {
+    description = description.replaceAll(regionalIdentifier, redactors.regionalIdentifierRedactor.main);
   });
   regions.forEach(region => {
     description = description.replaceAll(region, redactors.regionRedactor.main);

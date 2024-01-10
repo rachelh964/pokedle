@@ -1,27 +1,23 @@
 import React, { useState, useEffect } from "react";
-import { PokemonNew, PokemonSpecies } from "./Pokemon";
+import { PokemonNew, PokemonSpecies } from "./context/Pokemon";
 import "./App.scss";
-//@ts-ignore
-import { getFormattedDate } from "./utils/dateUtils.ts";
+import { getFormattedDate } from "./utils/dateUtils";
+import { Guess, formatGuesses } from "./utils/guessUtils";
 import {
-  Guess,
   displayAbilities,
   fetchAllPokemonNames,
   getPokemonCount,
   simplifyPokemonName,
-  //@ts-ignore
-} from "./utils/pokemonUtils.ts";
-//@ts-ignore
-import { formatHeight, formatWeight, trimDescription } from "./utils/textUtils.ts";
-//@ts-ignore
-import { fetchPokemon, fetchPokemonSpecies } from "./utils/fetchUtils.ts";
-//@ts-ignore
-import { updateScore } from "./utils/scoreUtils.ts"
+} from "./utils/pokemonUtils";
+import { formatHeight, formatWeight, trimDescription } from "./utils/textUtils";
+import { fetchPokemon, fetchPokemonSpecies } from "./utils/fetchUtils";
+import { updateScore } from "./utils/scoreUtils"
 import SearchableDropdown from "./components/SearchableDropdown";
 
 import lottie from "lottie-web";
 import lottieAnimation from "./assets/loading-lottie.json";
 import StatsModal from "./components/StatsModal";
+import { fetchGuessFromLocalStorage, storeGuess, storeScore } from "./utils/storageUtils";
 
 const enum Notices {
   Right = "SUCCESS!! You got it in ",
@@ -30,12 +26,6 @@ const enum Notices {
   NoInputGuess = "Skipped",
   OutOfGuesses = "Aww, better luck next time! The correct answer was ",
   AttemptedGuessAfterFailure = "Sorry, you're out of guesses. Try out practice mode, or come back tomorrow!",
-}
-
-interface StoredGuess {
-  number: number;
-  date: string;
-  guesses: Guess[];
 }
 
 function App() {
@@ -122,14 +112,11 @@ function App() {
     } else {
       const pokemonCount = getPokemonCount();
       if (pokemonNumber === 0) {
+        const prevGuess = fetchGuessFromLocalStorage();
         if (isDailyVersion) {
           const rngBasedOnDate = seedrandom(new Date().toDateString());
-
           const nowDate: Date = new Date();
           nowDate.setHours(0, 0, 0, 0);
-          const prevGuess: StoredGuess | null = JSON.parse(
-            localStorage.getItem("pokedle_todaysGuess")
-          );
           const prevGuessTime: string | null = prevGuess && prevGuess.date;
           if (prevGuessTime !== null) {
             const prevDate = new Date(prevGuessTime);
@@ -145,9 +132,6 @@ function App() {
         } else {
           /** Set up for practice mode - but DON'T generate the same as today's daily pokemon */
           let pokemonNum: number = 0;
-          const prevGuess: StoredGuess | null = JSON.parse(
-            localStorage.getItem("pokedle_todaysGuess")
-          );
           const dailyNum: number = prevGuess === null ? 0 : prevGuess.number;
           do {
             pokemonNum = generatePokemonNumber(Math.random, pokemonCount);
@@ -206,12 +190,12 @@ function App() {
     function setNewPokemonNumber(rngBasedOnDate: any, pokemonCount: any) {
       const newPokemon = generatePokemonNumber(rngBasedOnDate, pokemonCount);
       setPokemonNumber(newPokemon);
-      localStorage.setItem("pokedle_todaysGuess", JSON.stringify({ number: newPokemon, date: getFormattedDate(new Date()), guesses: [] }));
+      storeGuess(formatGuesses([], newPokemon));
     }
 
     function generatePokemonNumber(rngBasedOnDate: any, pokemonCount: any) {
       return Math.floor(rngBasedOnDate() * (pokemonCount - 1)) + 1;
-    } // eslint-disable-next-line react-hooks/exhaustive-deps
+    }
   }, [pokemon, pokemonSpecies, pokemonNumber, listOfPokemonNames, pokemonListFetched, isDailyVersion]);
 
   const reset = () => {
@@ -253,12 +237,14 @@ function App() {
         setGuesses(prevGuesses => [...prevGuesses, guessToStore]);
         console.log("setting correct guess to ", guesses.length + 1);
         setCorrectGuess(guesses.length + 1);
-        updateScore(guesses.length + 1);
-        storeGuess(guessToStore);
-        setNotice(Notices.Right + guesses.length + "!");
-        setTimeout(() => {
-          setShowStats(true);
-        }, 2000);
+        setNotice(Notices.Right + (guesses.length + 1) + "!");
+        storeGuess(formatGuesses(guesses, pokemonNumber, guessToStore));
+        if (isDailyVersion) {
+          storeScore(updateScore(guesses.length + 1));
+          setTimeout(() => {
+            setShowStats(true);
+          }, 2000);
+        }
       } else {
         if (guesses.length <= 5) {
           guessToStore =
@@ -266,11 +252,16 @@ function App() {
               ? { guess: Notices.NoInputGuess, correct: false }
               : { guess: guess, correct: false };
           setGuesses([...guesses, guessToStore]);
-          storeGuess(guessToStore);
+          storeGuess(formatGuesses(guesses, pokemonNumber, guessToStore));
           if (guesses.length >= 5) {
-            updateScore(7);
             setOutOfGuesses(true);
             setNotice(Notices.OutOfGuesses + pokemonName + ".");
+            if (isDailyVersion) {
+              storeScore(updateScore(7));
+              setTimeout(() => {
+                setShowStats(true);
+              }, 2000);
+            }
           }
           // if (guess.length === 0) {
           //   setNotice(Notices.NoInputGuess);
@@ -302,34 +293,20 @@ function App() {
     return guessList;
   };
 
-  const storeGuess = (guess: { guess: string; correct: boolean }) => {
-    if (isDailyVersion) {
-      const guessesToStore = guesses;
-      guessesToStore.push(guess);
-      const guessToStore: StoredGuess = {
-        date: getFormattedDate(new Date()),
-        number: pokemonNumber,
-        guesses: guessesToStore
-      };
-      console.log("storing prevGuess in storeGuess", guessToStore);
-      localStorage.setItem("pokedle_todaysGuess", JSON.stringify(guessToStore));
-    }
-  };
-
   useEffect(() => {
-    const prevGuesses: StoredGuess | null = JSON.parse(localStorage.getItem("pokedle_todaysGuess"));
-    if (isDailyVersion && prevGuesses !== null) {
-      if (prevGuesses?.date !== getFormattedDate(new Date())) {
+    const prevGuess = fetchGuessFromLocalStorage();
+    if (isDailyVersion && prevGuess !== null) {
+      if (prevGuess?.date !== getFormattedDate(new Date())) {
         reset();
       } else {
-        setPokemonNumber(prevGuesses.number);
-        setGuesses(prevGuesses.guesses);
+        setPokemonNumber(prevGuess.number);
+        setGuesses(prevGuess.guesses);
         setCorrectGuess(-1);
         setPokemonFetched(false);
         setPokemonSpeciesFetched(false);
         setRedactedDescription("");
         setIsLoading(true);
-        prevGuesses.guesses.forEach((guess, index) => {
+        prevGuess.guesses.forEach((guess, index) => {
           if (guess.correct === true) {
             setCorrectGuess(index + 1);
           }

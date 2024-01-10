@@ -32,12 +32,12 @@ export const locations = [
   "Poni"
 ]
 
-interface FormattedPokemonNames {
+export interface FormattedPokemonName {
   basic: string;
   formatted: string;
 }
 
-export const formattedNames: FormattedPokemonNames[] = [
+export const formattedNames: FormattedPokemonName[] = [
   {
     basic: "nidoran-f",
     formatted: "Nidoran♀"

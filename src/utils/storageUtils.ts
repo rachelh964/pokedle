@@ -1,4 +1,5 @@
-import { Score } from "./scoreUtils";
+import { StoredGuess } from "./guessUtils";
+import { Score, defaultScore } from "./scoreUtils";
 
 export const storePokemonNames = (pokemonArray: string[]): void => {
   localStorage.setItem(
@@ -10,7 +11,7 @@ export const storePokemonNames = (pokemonArray: string[]): void => {
 
 export const fetchPokemonNamesFromStorage = (): string[] => {
   const storedNames = localStorage.getItem("pokedle_pokemonNames");
-  if (storedNames && storedNames.length > 100) {
+  if (storedNames && storedNames.length > 1) {
     console.log("fetching pokemon names from localStorage");
     return JSON.parse(storedNames);
   } else {
@@ -18,23 +19,23 @@ export const fetchPokemonNamesFromStorage = (): string[] => {
   }
 }
 
+export const storeScore = (score: Score) => {
+  localStorage.setItem(
+    "pokedle_score",
+    JSON.stringify(score)
+  );
+}
+
 export const fetchScoreFromLocalStorage = (): Score => {
   const storedScore = localStorage.getItem("pokedle_score");
-  if (storedScore) {
-    return JSON.parse(storedScore);
-  } else {
-    return {
-      "1": 0,
-      "2": 0,
-      "3": 0,
-      "4": 0,
-      "5": 0,
-      "6": 0,
-      "played": 0,
-      "winTotal": 0,
-      "winPercentage": 0,
-      "currentStreak": 0,
-      "maxStreak": 0
-    }
-  }
+  return storedScore ? JSON.parse(storedScore) : defaultScore;
+}
+
+export const storeGuess = (guess: StoredGuess) => {
+  localStorage.setItem("pokedle_todaysGuess", JSON.stringify(guess));
+}
+
+export const fetchGuessFromLocalStorage = (): StoredGuess | null => {
+  const todaysGuess = localStorage.getItem("pokedle_todaysGuess");
+  return todaysGuess ? JSON.parse(todaysGuess) : null;
 }
